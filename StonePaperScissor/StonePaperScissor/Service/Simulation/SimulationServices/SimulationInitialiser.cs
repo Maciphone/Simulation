@@ -1,32 +1,36 @@
-using StonePaperScissor.Service.Initialiser;
-using StonePaperScissor.Service.Simulation;
 using StonePaperScissor.Service.Simulation.Items;
+using StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 using StonePaperScissor.View;
 
-namespace StonePaperScissor.Service.Initialiser;
+namespace StonePaperScissor.Service.Simulation.SimulationServices;
 
 public class SimulationInitialiser : IInitialiser
 {
     private static readonly Random _random = new Random();
     private readonly IVisualiser _dotVisualiser;
     private readonly IGameStatistic _dotGameStatistic;
-    private readonly ISimulatorFactory _simulatorFactory;
+ //   private readonly ISimulatorFactory _simulatorFactory;
+    private readonly IServiceProvider _serviceProvider;
    
 
-    public SimulationInitialiser(IVisualiser dotVisualiser, IGameStatistic dotGameStatistic, ISimulatorFactory simulatorFactory)
+    public SimulationInitialiser(IVisualiser dotVisualiser, IGameStatistic dotGameStatistic, ISimulatorFactory simulatorFactory, IServiceProvider serviceProvider)
     {
        
         _dotVisualiser = dotVisualiser;
         _dotGameStatistic = dotGameStatistic;
-        _simulatorFactory = simulatorFactory;
+        //_simulatorFactory = simulatorFactory;
+        _serviceProvider = serviceProvider;
     }
 
     
     public ISimulator Initialise(int row, int columns, int itemCount)
     {
         List<Item> startItems = CreateAllItems(itemCount, row, columns);
+        using var scope = _serviceProvider.CreateScope();
+        var simulatorFactory = scope.ServiceProvider.GetRequiredService<ISimulatorFactory>();
 
-        return _simulatorFactory.CreateSimulator(row,columns,startItems,_dotVisualiser,_dotGameStatistic);
+
+        return simulatorFactory.CreateSimulator(row,columns,startItems,_dotVisualiser,_dotGameStatistic);
     }
 
     private List<Item> CreateAllItems(int itemCount, int row, int columns)

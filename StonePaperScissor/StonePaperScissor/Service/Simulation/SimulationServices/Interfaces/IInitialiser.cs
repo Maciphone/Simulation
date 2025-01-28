@@ -1,6 +1,4 @@
-using StonePaperScissor.Service.Simulation;
-
-namespace StonePaperScissor.Service.Initialiser;
+namespace StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 
 public interface IInitialiser
 {

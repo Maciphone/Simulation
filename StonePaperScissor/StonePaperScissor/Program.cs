@@ -1,8 +1,8 @@
 using StonePaperScissor.Service;
-
-using StonePaperScissor.Service.Initialiser;
 using StonePaperScissor.Service.Simulation;
 using StonePaperScissor.Service.Simulation.Items;
+using StonePaperScissor.Service.Simulation.SimulationServices;
+using StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 using StonePaperScissor.View;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,9 +16,10 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IInitialiser, SimulationInitialiser>();
 builder.Services.AddSingleton<IVisualiser, DotVisualiser>();
 builder.Services.AddSingleton<IGameStatistic, DotStatistic>();
+builder.Services.AddSingleton<ISimulatorService, SimulationService>();
 
 
-builder.Services.AddScoped<ISimulatorFactory, SimulatorFactory>();
+builder.Services.AddSingleton<ISimulatorFactory, SimulatorFactory>();
 
 
 

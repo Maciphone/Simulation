@@ -1,8 +1,7 @@
 using System.Collections;
 using Microsoft.AspNetCore.Mvc;
-
-using StonePaperScissor.Service.Initialiser;
 using StonePaperScissor.Service.Simulation;
+using StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 
 namespace StonePaperScissor.Controller;
 
@@ -10,43 +9,45 @@ namespace StonePaperScissor.Controller;
 [Route("api/[controller]")]
 public class SimulationController : ControllerBase
 {
-    private readonly IInitialiser _simulationInicialiser;
-    private  ISimulator _simulator;
-   
+    private readonly ISimulatorService _simulatorService;
 
-    public SimulationController(IInitialiser simulationInicialiser)
+    public SimulationController(ISimulatorService simulatorService)
     {
-        _simulationInicialiser = simulationInicialiser;
-        
-        
-
+        _simulatorService = simulatorService;
     }
-    
-    [HttpPost("start")]
+
+    [HttpPost("initialise")]
     public IActionResult StartSimulation(int rows, int columns, int itemCount)
     {
-        _simulator = _simulationInicialiser.Initialise(rows, columns, itemCount);
-        _simulator.PlayOneGame();
-      
-        if (_simulator == null)
+        if (_simulatorService.InitialiseSimulation(rows, columns, itemCount))
         {
-            return BadRequest("hol van a szimulator");
+            return Ok();
         }
-       
-        return Ok("Simulation started!");
+
+        return BadRequest("game could not initialised");
     }
     
     [HttpPost("play")]
     public IActionResult PlayOneGame()
     {
-        if (_simulator == null)
-        {
-            return BadRequest("Simulation has not been started.");
-        }
-
-        _simulator.PlayOneGame(); // Játék egy körének lejátszása
-        return Ok("Played one game round.");
+       _simulatorService.StartSimulation();
+       return Ok();
     }
+    
+    [HttpPost("pause")]
+    public IActionResult StopGame()
+    {
+        _simulatorService.StopSimulation();
+        return Ok();
+    }
+    
+    [HttpPost("resume")]
+    public IActionResult ResumeGame()
+    {
+        _simulatorService.ResumeGame();
+        return Ok();
+    }
+    
 
 }
     

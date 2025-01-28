@@ -1,8 +1,7 @@
-using System.Security.Cryptography.Xml;
-using StonePaperScissor.Service.Simulation.Items;
+using StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 using StonePaperScissor.View;
 
-namespace StonePaperScissor.Service.Simulation;
+namespace StonePaperScissor.Service.Simulation.SimulationServices;
 
 public class Simulator :ISimulator
 {
@@ -13,6 +12,7 @@ public class Simulator :ISimulator
     private List<Item> _newItems;
     public  IVisualiser _dotVisualiser;
     public IGameStatistic _dotGameStatistic;
+    private bool Stopped;
     
     
 
@@ -24,6 +24,7 @@ public class Simulator :ISimulator
         _dotVisualiser = dotVisualiser;
         _dotGameStatistic = dotGameStatistic;
         _newItems = new List<Item>();
+        Stopped = false;
     }
 
     public Simulator()
@@ -59,10 +60,16 @@ public class Simulator :ISimulator
         }
        
         TransformItems();
-        RemoveNotAliveItems();
-        AddNewItems();
+        ReactivateHitedItems();
+        //RemoveNotAliveItems();
+        //AddNewItems();
         _dotVisualiser.SimulationVisualisation(_items, X, Y);
-        //_dotGameStatistic.ShowStatistic(_items);
+        _dotGameStatistic.ShowStatistic(_items);
+    }
+
+    private void ReactivateHitedItems()
+    {
+        _items.ForEach(a=>a.Alive=true);
     }
 
     private void AddNewItems()
@@ -74,11 +81,23 @@ public class Simulator :ISimulator
     public void PlayOneGame()
     {
        
-        while (!OnlyOneType())
+        while (!OnlyOneType() && !Stopped)
         {
            
             PlayOneRound();
+            Thread.Sleep(70);
         }
+    }
+
+    public void StopGame()
+    {
+        Stopped = true;
+    }
+
+    public void Resume()
+    {
+        Stopped = false;
+        PlayOneGame();
     }
 
     private bool OnlyOneType()
@@ -110,13 +129,19 @@ public class Simulator :ISimulator
         switch (hitedItem.Type)
         {
             case ItemType.Paper:
-                _newItems.Add(new Scissor("S", hitedItem.Position));
+                //_newItems.Add(new Scissor("S", hitedItem.Position));
+                hitedItem.Sign = "S";
+                hitedItem.Type = ItemType.Scissor;
             break;
             case ItemType.Scissor:
-                _newItems.Add(new Stone("O", hitedItem.Position));
+                //_newItems.Add(new Stone("O", hitedItem.Position));
+                hitedItem.Sign = "O";
+                hitedItem.Type = ItemType.Stone;
                 break;
             case ItemType.Stone:
-                _newItems.Add(new Paper("P", hitedItem.Position));
+                //_newItems.Add(new Paper("P", hitedItem.Position));
+                hitedItem.Sign = "P";
+                hitedItem.Type = ItemType.Paper;
                 break;
         }
     }

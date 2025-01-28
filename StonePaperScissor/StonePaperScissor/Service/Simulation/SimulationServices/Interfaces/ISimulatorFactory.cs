@@ -1,6 +1,7 @@
 using StonePaperScissor.View;
 
-namespace StonePaperScissor.Service.Simulation;
+namespace StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
+
 
 public interface ISimulatorFactory
 {
