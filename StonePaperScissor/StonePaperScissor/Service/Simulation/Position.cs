@@ -2,13 +2,13 @@ namespace StonePaperScissor.Service.Simulation;
 
 public class Position
 {
-    public int Row { get; set; }
-    public int Column { get; set; }
+    public int X { get; set; }
+    public int Y { get; set; }
 
-    public Position(int row, int column)
+    public Position(int x, int y)
     {
-        Row = row;
-        Column = column;
+        X = x;
+        Y = y;
     }
 
     public Position()
@@ -19,13 +19,18 @@ public class Position
     {
         if (obj is Position other)
         {
-            return Row == other.Row && Column == other.Column;
+            return X == other.X && Y == other.Y;
         }
         return false;
     }
     
     public override int GetHashCode()
     {
-        return HashCode.Combine(Row, Column);
+        return HashCode.Combine(X, Y);
+    }
+
+    public override string ToString()
+    {
+        return $"X: {X}, Y: {Y}";
     }
 }

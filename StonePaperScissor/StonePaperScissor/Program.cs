@@ -1,5 +1,6 @@
 using StonePaperScissor.Service;
-using StonePaperScissor.Service.Inicialiser;
+
+using StonePaperScissor.Service.Initialiser;
 using StonePaperScissor.Service.Simulation;
 using StonePaperScissor.Service.Simulation.Items;
 using StonePaperScissor.View;
@@ -12,11 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<IInicialiser, SimulationInicialiser>();
+builder.Services.AddScoped<IInitialiser, SimulationInitialiser>();
 builder.Services.AddSingleton<IVisualiser, DotVisualiser>();
 builder.Services.AddSingleton<IGameStatistic, DotStatistic>();
-builder.Services.AddScoped<ISimulatorService, SimulatorService>();
-builder.Services.AddScoped<IUtil, Util>();
+
+
+builder.Services.AddScoped<ISimulatorFactory, SimulatorFactory>();
+
+
+
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

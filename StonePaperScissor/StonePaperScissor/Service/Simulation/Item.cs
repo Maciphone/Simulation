@@ -7,48 +7,35 @@ public abstract class Item
     protected Random Random = new Random();
     public ItemType Type { get; set; }
     public bool Alive { get; set; }
-    public string Sign { get; }
+    public string Sign { get; set; }
     public Position Position { get; set; }
-    protected IUtil Util;
+  
 
-    protected Item(ItemType type, string sign, Position position, IUtil util)
+    protected Item(ItemType type, string sign, Position position)
     {
         Type = type;
         Sign = sign;
         Position = position;
         Alive = true;
-        SetUtil(util);
+       
     }
 
-    protected Item(string sign, Position position, IUtil util)
+    protected Item(string sign, Position position)
     {
         Sign = sign;
         Position = position;
         Alive = true;
-        SetUtil(util);
+        
     }
     
-    public void SetUtil(IUtil util)
-    {
-        Util = util ?? throw new ArgumentNullException(nameof(util));
-    }
-
 
     public void Hit(Item item)
     {
         item.Alive = false;
+        item.Sign = "";
     }
 
-    protected Field GetRandomField(List<Field> optionalFields)
-    {
-        
-        
-            int index = Random.Next(0,optionalFields.Count);
-            var field = optionalFields[index];
-        
+    
 
-        return field;
-    }
-
-    public abstract void Move();
+    public abstract void Move(int row, int column, List<Item> items);
 }

@@ -1,19 +1,17 @@
-namespace StonePaperScissor.Service.Simulation.Items;
+using StonePaperScissor.Service.Simulation;
 
-public  class Util : IUtil
+namespace StonePaperScissor.Util;
+
+public  static class Util
 {
-    private  ISimulatorService _simulatorService;
+    private static readonly Random Random = new Random();
+    
 
-    public Util(ISimulatorService simulatorService)
-    {
-        _simulatorService = simulatorService;
-    }
-
-    public  List<Field> FieldsAround(Position position)
+    public  static List<Field> FieldsAround(Position position, int row, int column,List<Item> items)
     {
         List<Field> result = new List<Field>();
-        int startRowIndex = position.Row;
-        int startColumnIndex = position.Column;
+        int startRowIndex = position.X;
+        int startColumnIndex = position.Y;
 
         int[] dRow =
             [-1, -1, -1, 0, 0, 1, 1, 1];
@@ -23,15 +21,26 @@ public  class Util : IUtil
             int newRow = startRowIndex + dRow[i];
             int newCol = startColumnIndex + dCol[i];
 
-            if (newRow >= 0 && newRow < _simulatorService.Simulator.Rows-1 && newCol >= 0 && newCol < _simulatorService.Simulator.Columns-1)
+            if (newRow >= 0 && newRow < row && newCol >= 0 && newCol <column)
             {
                 var tempPosition = new Position(newRow, newCol);
-                var item = _simulatorService.Simulator.GetItemByPosition(tempPosition);
+                var item =  items.FirstOrDefault(it => it.Position.Equals(tempPosition));
                 result.Add(new Field(tempPosition, item));
             }
         }
 
         return result;
+    }
+    
+    public static Field GetRandomField(List<Field> optionalFields)
+    {
+        
+        
+        int index = Random.Next(0,optionalFields.Count);
+        var field = optionalFields[index];
+        
+
+        return field;
     }
 }
     

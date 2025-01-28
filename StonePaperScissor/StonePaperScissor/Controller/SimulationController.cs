@@ -1,6 +1,7 @@
 using System.Collections;
 using Microsoft.AspNetCore.Mvc;
-using StonePaperScissor.Service.Inicialiser;
+
+using StonePaperScissor.Service.Initialiser;
 using StonePaperScissor.Service.Simulation;
 
 namespace StonePaperScissor.Controller;
@@ -9,14 +10,14 @@ namespace StonePaperScissor.Controller;
 [Route("api/[controller]")]
 public class SimulationController : ControllerBase
 {
-    private readonly IInicialiser _simulationInicialiser;
-    private readonly ISimulatorService _simulatorService;
+    private readonly IInitialiser _simulationInicialiser;
+    private  ISimulator _simulator;
    
 
-    public SimulationController(IInicialiser simulationInicialiser, ISimulatorService simulatorService)
+    public SimulationController(IInitialiser simulationInicialiser)
     {
         _simulationInicialiser = simulationInicialiser;
-        _simulatorService = simulatorService;
+        
         
 
     }
@@ -24,10 +25,10 @@ public class SimulationController : ControllerBase
     [HttpPost("start")]
     public IActionResult StartSimulation(int rows, int columns, int itemCount)
     {
-        _simulatorService.Simulator = _simulationInicialiser.Inicialise(rows, columns, itemCount);
-        _simulatorService.Simulator.PlayOneGame();
+        _simulator = _simulationInicialiser.Initialise(rows, columns, itemCount);
+        _simulator.PlayOneGame();
       
-        if (_simulatorService.Simulator == null)
+        if (_simulator == null)
         {
             return BadRequest("hol van a szimulator");
         }
@@ -38,12 +39,12 @@ public class SimulationController : ControllerBase
     [HttpPost("play")]
     public IActionResult PlayOneGame()
     {
-        if (_simulatorService.Simulator == null)
+        if (_simulator == null)
         {
             return BadRequest("Simulation has not been started.");
         }
 
-        _simulatorService.Simulator.PlayOneGame(); // Játék egy körének lejátszása
+        _simulator.PlayOneGame(); // Játék egy körének lejátszása
         return Ok("Played one game round.");
     }
 

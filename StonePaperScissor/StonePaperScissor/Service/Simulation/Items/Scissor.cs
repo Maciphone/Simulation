@@ -2,40 +2,34 @@ namespace StonePaperScissor.Service.Simulation.Items;
 
 public class Scissor : Item
 {
-    public Scissor(ItemType type, string sign, Position position, IUtil util) : base(type, sign, position, util)
+    public Scissor(ItemType type, string sign, Position position) : base(type, sign, position)
     {
     }
 
-    public Scissor(string sign, Position position, IUtil util) : base(sign, position, util)
+    public Scissor(string sign, Position position) : base(sign, position)
     {
         Type = ItemType.Scissor;
     }
 
-    public override void Move()
+    public override void Move(int row, int column,  List<Item> items)
     {
         if (Alive)
         {
-            List<Field> optionalFields = Util.FieldsAround(Position);
-            if (optionalFields == null || optionalFields.Count == 0)
+            List<Field> optionalFields = Util.Util.FieldsAround(Position, row,column,items);
+            var hittableFields = optionalFields
+                .FindAll(f => f.Item is { Type: ItemType.Paper });
+            if (hittableFields.Count == 0)
             {
-                Console.WriteLine("No optional fields found.");
-                return;
-            }
-            
-            var hitableFields = optionalFields.FindAll(f =>f.Item!=null && f.Item.Type == ItemType.Paper);
-            if (hitableFields.Count == 0)
-            {
-                Console.WriteLine("No hitable fields, choosing a random field.");
-                Position = GetRandomField(optionalFields).Position;
+                Field randomField = Util.Util.GetRandomField(optionalFields);
+                Position = randomField.Position;
             }
             else
             {
-                var index = Random.Next(0, hitableFields.Count-1);
-                var item = optionalFields[index].Item;
+                var index = Random.Next(0, hittableFields.Count);
+                var item = hittableFields[index].Item;
                 Position = item.Position;
                 Hit(item);
             }
-            
         }
     }
 }

@@ -26,7 +26,7 @@ public class DotVisualiser : IVisualiser
         {
             for (int j = 0; j < columns; j++)
             {
-                Console.Write(board[i, j] + " ");
+                Console.Write(board[i, j] );
             }
             Console.WriteLine();
         }
@@ -42,7 +42,7 @@ public class DotVisualiser : IVisualiser
         {
             for (int j = 0; j < columns; j++)
             {
-                board[i, j] = '.'; 
+                board[i, j] = ' '; 
             }
         }
     }
@@ -51,7 +51,7 @@ public class DotVisualiser : IVisualiser
     {
         foreach (var item in items)
         {
-            board[item.Position.Row, item.Position.Column] = item.Sign[0];
+            board[item.Position.X, item.Position.Y] = item.Sign[0];
                 
         }
     }
