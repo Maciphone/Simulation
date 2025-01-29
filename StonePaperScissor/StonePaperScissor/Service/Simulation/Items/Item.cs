@@ -29,13 +29,18 @@ public abstract class Item
     }
     
 
-    public void Hit(Item item)
+    public Item Hit(Item item)
     {
-        item.Alive = false;
-        item.Sign = "";
+        if (item.Alive)
+        {
+            item.Alive = false;
+            item.Sign = "";
+        }
+        return item;
+        
     }
 
     
 
-    public abstract void Move(int row, int column, List<Item> items);
+    public abstract Item Move(int row, int column, List<Item> items);
 }

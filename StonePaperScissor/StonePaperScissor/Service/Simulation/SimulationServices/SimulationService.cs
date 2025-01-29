@@ -6,43 +6,60 @@ public class SimulationService : ISimulatorService
 {
     private readonly IInitialiser _initialiser;
     private ISimulator _simulator;
+    private ISimulationStorage _simulationStorage;
+    private int count;
     
 
-    public SimulationService(IInitialiser initialiser)
+    public SimulationService(IInitialiser initialiser, ISimulationStorage simulationStorage)
     {
         _initialiser = initialiser;
-        
+        _simulationStorage = simulationStorage;
     }
 
-    public bool InitialiseSimulation(int row, int columns, int itemCount)
+    public string InitialiseSimulation(int row, int columns, int itemCount)
     {
-        _simulator = _initialiser.Initialise(row, columns, itemCount);
-        if (_simulator != null)
+
+        var simulationId = Guid.NewGuid().ToString();
+        var simulator = _initialiser.Initialise(row, columns, itemCount);
+        if (simulator == null)
         {
-           
-            return true;
+            throw new InvalidOperationException("Failed to initialize simulation.");
         }
 
-        return false;
+        _simulationStorage.AddSimulation(simulationId, simulator);
+        return simulationId;
     }
 
-    public void StartSimulation()
+
+    public void StartSimulation(string simulationId)
     {
-        if (_simulator == null)
+        var simulator = _simulationStorage.GetSimulation(simulationId);
+        if (simulator == null)
         {
-            throw new InvalidOperationException("Simulation has not been initialized. Call InitialiseSimulation() first.");
+            throw new InvalidOperationException($"Simulation with ID {simulationId} not found.");
         }
 
-        _simulator.PlayOneGame();
+        simulator.PlayOneGame();
+
     }
 
-    public void StopSimulation()
+    public void PauseSimulation(string simulationId)
     {
-        _simulator.StopGame();
+        var simulator = _simulationStorage.GetSimulation(simulationId);
+        simulator.StopGame();
     }
 
-    public void ResumeGame()
+    public void ResumeSimulation(string simulationId)
     {
-        _simulator.Resume();
+        var simulator = _simulationStorage.GetSimulation(simulationId);
+        simulator.Resume();
     }
+    
+    public void EndSimulation(string simulationId)
+    {
+        var simulator = _simulationStorage.GetSimulation(simulationId);
+        simulator.End();
+    }
+    
+    
 }

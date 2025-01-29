@@ -1,3 +1,4 @@
+using StonePaperScissor.Service.Simulation.Items;
 using StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 using StonePaperScissor.View;
 
@@ -13,6 +14,7 @@ public class Simulator :ISimulator
     public  IVisualiser _dotVisualiser;
     public IGameStatistic _dotGameStatistic;
     private bool Stopped;
+    private int count;
     
     
 
@@ -31,64 +33,7 @@ public class Simulator :ISimulator
     {
         _newItems = new List<Item>();
     }
-
-
-    // _items.Where(item => item.Alive).To_items()
-        //     .ForEach(item => item.Move());  // nullreference hiba
-    private void PlayOneRound()
-    {
-       Shuffle_items();
-        foreach (var item in _items)
-        {
-            if (item.Alive)
-            {
-                // Console.WriteLine(item.Type);
-                // Console.WriteLine(item.Position);
-                var bef = item.Position;
-                item.Move(X, Y, _items);
-                var after = item.Position;
-                if (Equals(bef, after))
-                {
-                    Console.WriteLine("szaroslecsó");
-                    return;
-                }
-
-                // Console.WriteLine(item.Position);
-            }
-
-            var newPos = item.Position;
-        }
-       
-        TransformItems();
-        ReactivateHitedItems();
-        //RemoveNotAliveItems();
-        //AddNewItems();
-        _dotVisualiser.SimulationVisualisation(_items, X, Y);
-        _dotGameStatistic.ShowStatistic(_items);
-    }
-
-    private void ReactivateHitedItems()
-    {
-        _items.ForEach(a=>a.Alive=true);
-    }
-
-    private void AddNewItems()
-    {
-        _items.AddRange(_newItems);
-        _newItems.Clear();
-    }
-
-    public void PlayOneGame()
-    {
-       
-        while (!OnlyOneType() && !Stopped)
-        {
-           
-            PlayOneRound();
-            Thread.Sleep(70);
-        }
-    }
-
+    
     public void StopGame()
     {
         Stopped = true;
@@ -100,28 +45,72 @@ public class Simulator :ISimulator
         PlayOneGame();
     }
 
+    public void End()
+    {
+        _items.ForEach(e=>e.Type=ItemType.Paper);
+    }
+
+
+    // _items.Where(item => item.Alive).To_items()
+        //     .ForEach(item => item.Move());  // nullreference hiba
+    private void PlayOneRound()
+    {
+       Shuffle_items();
+        foreach (var item in _items)
+        {
+            if (item.Alive)
+            {
+              
+              
+                var hitItem = item.Move(X, Y, _items);
+                if (hitItem != null){
+                _newItems.Add(hitItem);
+                }
+                // {
+                //     //_items.Remove(item);
+                //     //_newItems.Add(item);
+                //    // TransformItem(hitItem);
+                //   //  ReactivateHitedItem(hitItem);
+                // }
+                
+            }
+        }
+       
+        TransformNewItems();
+   
+       // _dotVisualiser.SimulationVisualisation(_items, X, Y);
+        _dotGameStatistic.ShowStatistic(_items);
+    }
+
+    
+    public void PlayOneGame()
+    {
+       
+        while (!OnlyOneType() && !Stopped)
+        {
+            count++;
+            PlayOneRound();
+            Thread.Sleep(70);
+            Console.WriteLine(count);
+        }
+    }
+
+    
+
     private bool OnlyOneType()
     {
        
-        bool isSingleType = _items.Any() && _items.Select(item => item.Type).Distinct().Count() == 1;
-        return isSingleType;
+        // bool isSingleType = _items.Any() && _items.Select(item => item.Type).Distinct().Count() == 1;
+        // return isSingleType;
+        return _items.Select(item => item.Type).ToHashSet().Count == 1;
 
     }
+    
 
-    private void RemoveNotAliveItems()
+    private void TransformNewItems()
     {
-        _items.RemoveAll(f => f.Alive == false);
-    }
-
-    private void TransformItems()
-    {
-        var hitedItems = _items.FindAll(e => e.Alive == false);
-        foreach (var hitedItem in hitedItems)
-        {
-            MakeOneTransform(hitedItem);
-            
-        }
-        
+        _newItems.ForEach(MakeOneTransform);
+        _newItems.Clear();
     }
 
     private void MakeOneTransform(Item hitedItem)
@@ -129,31 +118,51 @@ public class Simulator :ISimulator
         switch (hitedItem.Type)
         {
             case ItemType.Paper:
-                //_newItems.Add(new Scissor("S", hitedItem.Position));
-                hitedItem.Sign = "S";
-                hitedItem.Type = ItemType.Scissor;
+               _items.Add(new Scissor("S", hitedItem.Position));
+               _items.Remove(hitedItem);
+               
+                // hitedItem.Sign = "S";
+                // hitedItem.Type = ItemType.Scissor;
             break;
             case ItemType.Scissor:
-                //_newItems.Add(new Stone("O", hitedItem.Position));
-                hitedItem.Sign = "O";
-                hitedItem.Type = ItemType.Stone;
+               _items.Add(new Stone("O", hitedItem.Position));
+               _items.Remove(hitedItem);
+
+                // hitedItem.Sign = "O";
+                // hitedItem.Type = ItemType.Stone;
                 break;
             case ItemType.Stone:
-                //_newItems.Add(new Paper("P", hitedItem.Position));
-                hitedItem.Sign = "P";
-                hitedItem.Type = ItemType.Paper;
+                _items.Add(new Paper("P", hitedItem.Position));
+                _items.Remove(hitedItem);
+
+                // hitedItem.Sign = "P";
+                // hitedItem.Type = ItemType.Paper;
                 break;
+        }
+    }
+    
+    //Fisher-Yates Shuffle
+    private void Shuffle_items()
+    {
+        int n = _items.Count;
+        while (n > 1)
+        {
+            int k = _random.Next(n--);
+            (_items[n], _items[k]) = (_items[k], _items[n]);
         }
     }
 
-    private void Shuffle_items()
-    {
-        
-        for (int i = _items.Count - 1; i > 0; i--)
-        {
-            int j = _random.Next(i + 1); 
-            (_items[i], _items[j]) = (_items[j], _items[i]); 
-        }
-    }
+    // private void Shuffle_items()
+    // {
+    //     
+    //     for (int i = _items.Count - 1; i > 0; i--)
+    //     {
+    //         int j = _random.Next(i + 1); 
+    //         (_items[i], _items[j]) = (_items[j], _items[i]); 
+    //     }
+    // }
+    
+    
+
     
 }

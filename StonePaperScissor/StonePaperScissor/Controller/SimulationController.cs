@@ -19,32 +19,32 @@ public class SimulationController : ControllerBase
     [HttpPost("initialise")]
     public IActionResult StartSimulation(int rows, int columns, int itemCount)
     {
-        if (_simulatorService.InitialiseSimulation(rows, columns, itemCount))
-        {
-            return Ok();
-        }
+        var simulationId = _simulatorService.InitialiseSimulation(rows, columns, itemCount);
+        
+        return Ok(new { SimulationId = simulationId });
+        
 
-        return BadRequest("game could not initialised");
+        
     }
     
     [HttpPost("play")]
-    public IActionResult PlayOneGame()
+    public IActionResult PlayOneGame(string simulationId)
     {
-       _simulatorService.StartSimulation();
+       _simulatorService.StartSimulation(simulationId);
        return Ok();
     }
     
     [HttpPost("pause")]
-    public IActionResult StopGame()
+    public IActionResult StopGame(string simulationId)
     {
-        _simulatorService.StopSimulation();
+        _simulatorService.PauseSimulation(simulationId);
         return Ok();
     }
     
     [HttpPost("resume")]
-    public IActionResult ResumeGame()
+    public IActionResult ResumeGame(string simulationId)
     {
-        _simulatorService.ResumeGame();
+        _simulatorService.ResumeSimulation( simulationId);
         return Ok();
     }
     

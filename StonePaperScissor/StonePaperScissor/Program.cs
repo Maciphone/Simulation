@@ -13,13 +13,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddScoped<IVisualiser, DotVisualiser>();
+builder.Services.AddScoped<IGameStatistic, DotStatistic>();
+builder.Services.AddSingleton<ISimulationStorage, SimulationStorage>();
+
+builder.Services.AddScoped<ISimulatorService, SimulationService>();
+builder.Services.AddScoped<ISimulatorService, SimulationService>();
 builder.Services.AddScoped<IInitialiser, SimulationInitialiser>();
-builder.Services.AddSingleton<IVisualiser, DotVisualiser>();
-builder.Services.AddSingleton<IGameStatistic, DotStatistic>();
-builder.Services.AddSingleton<ISimulatorService, SimulationService>();
-
-
-builder.Services.AddSingleton<ISimulatorFactory, SimulatorFactory>();
+builder.Services.AddScoped<ISimulatorFactory, SimulatorFactory>();
 
 
 
