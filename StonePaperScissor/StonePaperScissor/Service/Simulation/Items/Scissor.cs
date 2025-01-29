@@ -11,7 +11,7 @@ public class Scissor : Item
         Type = ItemType.Scissor;
     }
 
-    public override void Move(int row, int column,  List<Item> items)
+    public override Item Move(int row, int column,  List<Item> items)
     {
         if (Alive)
         {
@@ -29,7 +29,10 @@ public class Scissor : Item
                 var item = hittableFields[index].Item;
                 Position = item.Position;
                 Hit(item);
+                return item;
             }
         }
+
+        return null;
     }
 }
