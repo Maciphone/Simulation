@@ -30,6 +30,7 @@ public class SimulationController : ControllerBase
     [HttpPost("play")]
     public IActionResult PlayOneGame(string simulationId)
     {
+       
        _simulatorService.StartSimulation(simulationId);
        return Ok();
     }
