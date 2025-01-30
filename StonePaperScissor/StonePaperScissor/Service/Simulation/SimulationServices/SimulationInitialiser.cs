@@ -7,18 +7,12 @@ namespace StonePaperScissor.Service.Simulation.SimulationServices;
 public class SimulationInitialiser : IInitialiser
 {
     private static readonly Random _random = new Random();
-    private readonly IVisualiser _dotVisualiser;
-    private readonly IGameStatistic _dotGameStatistic;
  //   private readonly ISimulatorFactory _simulatorFactory;
     private readonly IServiceProvider _serviceProvider;
    
 
-    public SimulationInitialiser(IVisualiser dotVisualiser, IGameStatistic dotGameStatistic, ISimulatorFactory simulatorFactory, IServiceProvider serviceProvider)
+    public SimulationInitialiser(IServiceProvider serviceProvider)
     {
-       
-        _dotVisualiser = dotVisualiser;
-        _dotGameStatistic = dotGameStatistic;
-        //_simulatorFactory = simulatorFactory;
         _serviceProvider = serviceProvider;
     }
 
@@ -30,7 +24,7 @@ public class SimulationInitialiser : IInitialiser
         var simulatorFactory = scope.ServiceProvider.GetRequiredService<ISimulatorFactory>();
 
 
-        return simulatorFactory.CreateSimulator(row,columns,startItems,_dotVisualiser,_dotGameStatistic);
+        return simulatorFactory.CreateSimulator(row,columns,startItems);
     }
 
     private List<Item> CreateAllItems(int itemCount, int row, int columns)

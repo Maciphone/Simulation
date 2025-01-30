@@ -1,3 +1,6 @@
+using System.Text.Json;
+using Microsoft.AspNetCore.SignalR;
+using StonePaperScissor.HubSignalWebsocket;
 using StonePaperScissor.Service.Simulation.Items;
 using StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 using StonePaperScissor.View;
@@ -7,6 +10,7 @@ namespace StonePaperScissor.Service.Simulation.SimulationServices;
 public class Simulator :ISimulator
 {
     private static Random _random = new Random();
+    private readonly IHubContext<SimulationHub> _hubContext;
     public int X { get; set; }
     public int Y { get; set; }
     public List<Item> _items;
@@ -15,23 +19,31 @@ public class Simulator :ISimulator
     public IGameStatistic _dotGameStatistic;
     private bool Stopped;
     private int count;
+    private string _simulationId;
     
     
 
-    public Simulator(List<Item> items, int x, int y, IVisualiser dotVisualiser, IGameStatistic dotGameStatistic)
+    public Simulator(List<Item> items, int x, int y, IVisualiser dotVisualiser, IGameStatistic dotGameStatistic, IHubContext<SimulationHub> hubContext)
     {
         _items = items;
         X = x;
         Y = y;
         _dotVisualiser = dotVisualiser;
         _dotGameStatistic = dotGameStatistic;
+        _hubContext = hubContext;
         _newItems = new List<Item>();
         Stopped = false;
     }
 
-    public Simulator()
+    public Simulator(IHubContext<SimulationHub> hubContext)
     {
+        _hubContext = hubContext;
         _newItems = new List<Item>();
+    }
+
+    public void SetSimulationId(string simulationId)
+    {
+        _simulationId = simulationId;
     }
     
     public void StopGame()
@@ -64,7 +76,7 @@ public class Simulator :ISimulator
               
                 var hitItem = item.Move(X, Y, _items);
                 if (hitItem != null){
-                _newItems.Add(hitItem);
+                  _newItems.Add(hitItem);
                 }
                 // {
                 //     //_items.Remove(item);
@@ -79,23 +91,30 @@ public class Simulator :ISimulator
         TransformNewItems();
    
        // _dotVisualiser.SimulationVisualisation(_items, X, Y);
-        _dotGameStatistic.ShowStatistic(_items);
+        //_dotGameStatistic.ShowStatistic(_items);
     }
 
     
-    public void PlayOneGame()
+    public async void PlayOneGame()
     {
        
         while (!OnlyOneType() && !Stopped)
         {
             count++;
             PlayOneRound();
-            Thread.Sleep(70);
+            string gameState = SerializeGameState();
+            await _hubContext.Clients.Group(_simulationId).SendAsync("ReceiveGameState", gameState);
+           Thread.Sleep(70);
             Console.WriteLine(count);
         }
     }
 
-    
+    private string SerializeGameState()
+    {
+        return JsonSerializer.Serialize(_items);
+        
+    }
+
 
     private bool OnlyOneType()
     {
@@ -152,15 +171,7 @@ public class Simulator :ISimulator
         }
     }
 
-    // private void Shuffle_items()
-    // {
-    //     
-    //     for (int i = _items.Count - 1; i > 0; i--)
-    //     {
-    //         int j = _random.Next(i + 1); 
-    //         (_items[i], _items[j]) = (_items[j], _items[i]); 
-    //     }
-    // }
+  
     
     
 

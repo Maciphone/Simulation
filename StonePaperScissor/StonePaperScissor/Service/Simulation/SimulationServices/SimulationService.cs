@@ -21,6 +21,7 @@ public class SimulationService : ISimulatorService
 
         var simulationId = Guid.NewGuid().ToString();
         var simulator = _initialiser.Initialise(row, columns, itemCount);
+        simulator.SetSimulationId(simulationId);
         if (simulator == null)
         {
             throw new InvalidOperationException("Failed to initialize simulation.");
@@ -60,6 +61,11 @@ public class SimulationService : ISimulatorService
         var simulator = _simulationStorage.GetSimulation(simulationId);
         simulator.End();
     }
-    
+
+    public void SetSimulationId(string simulationId)
+    {
+        var simulator = _simulationStorage.GetSimulation(simulationId);
+        simulator.SetSimulationId(simulationId);
+    }
     
 }

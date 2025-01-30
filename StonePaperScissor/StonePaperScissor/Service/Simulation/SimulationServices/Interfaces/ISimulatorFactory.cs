@@ -5,5 +5,5 @@ namespace StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 
 public interface ISimulatorFactory
 {
-    ISimulator CreateSimulator(int rows, int columns, List<Item> items, IVisualiser dotVisualiser, IGameStatistic statistic);
+    ISimulator CreateSimulator(int rows, int columns, List<Item> items);
 }

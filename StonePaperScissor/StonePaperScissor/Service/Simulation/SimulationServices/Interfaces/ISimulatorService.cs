@@ -8,6 +8,7 @@ public interface ISimulatorService
     public void PauseSimulation(string simulationId);
     void ResumeSimulation(string simulationId);
     void EndSimulation(string simulationId);
+    void SetSimulationId(string simulationId);
 
 
 }

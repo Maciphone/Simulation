@@ -9,4 +9,5 @@ public interface ISimulator
     void Resume();
 
     void End();
+    void SetSimulationId(string simulationId);
 }
