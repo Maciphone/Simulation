@@ -30,6 +30,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder => builder
+            .WithOrigins("http://localhost:5173")  // Ezt állítsd be a frontend URL-jére
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
 
 var app = builder.Build();
 
@@ -44,6 +53,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors("AllowAllOrigins");
 
 
 app.MapPost("/api/auth/guest", (IConfiguration config) =>
@@ -55,7 +65,7 @@ app.MapPost("/api/auth/guest", (IConfiguration config) =>
         issuer: config["Jwt:Issuer"],
         audience: config["Jwt:Audience"],
         claims: new List<Claim> { new Claim("role", "guest") },
-        expires: DateTime.UtcNow.AddMinutes(30), // Vendég token 30 percig érvényes
+        expires: DateTime.UtcNow.AddMinutes(30), // 
         signingCredentials: creds
     );
 

@@ -7,10 +7,15 @@ export default defineConfig({
   server: {
     proxy: {
       "/simulationHub": {
-        target: "http://localhost:5213", // A backend címe
+        target: "http://localhost:5050", // A simulattion címe
         changeOrigin: true,
         secure: false,
         ws: true, // WebSocket támogatás
+      },
+      "/api": {
+        target: "http://localhost:5000", // A backendn címe
+        changeOrigin: true,
+        secure: false,
       },
     },
   },

@@ -7,10 +7,39 @@ const SimulationViewer = () => {
   const [simulationData, setSimulationData] = useState("");
   const [connection, setConnection] = useState(null);
   const [connect, setConect] = useState(false);
+  const [token, setToken] = useState("");
+
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const response = await fetch("/api/auth/guest", {
+          // Ha proxy van beállítva, elég csak "/api"
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Hiba: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setToken(data.token);
+        console.log("Vendég token:", data.token);
+      } catch (error) {
+        console.error("Token lekérés sikertelen:", error);
+      }
+    };
+
+    getToken();
+  }, []);
 
   const startConnection = () => {
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5213/simulationHub")
+      .withUrl("/simulationHub", {
+        accessTokenFactory: () => token, // Itt adjuk át a JWT tokent!
+      })
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Information)
       .build();
@@ -72,8 +101,7 @@ const SimulationViewer = () => {
           overflowX: "auto",
         }}
       >
-        {(simulationData && SimulationAnimation(simulationData)) ||
-          "Nincs még játékállapot..."}
+        {simulationData || "Nincs még játékállapot..."}
       </pre>
     </div>
   );

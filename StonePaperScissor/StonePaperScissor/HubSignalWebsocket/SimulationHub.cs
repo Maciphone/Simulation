@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using StonePaperScissor.Service.Simulation;
 
 namespace StonePaperScissor.HubSignalWebsocket;
 
+[Authorize] //only authorised user/guest can join
 public class SimulationHub :Hub
 {
     public async Task JoinSimulation(string simulationId)
