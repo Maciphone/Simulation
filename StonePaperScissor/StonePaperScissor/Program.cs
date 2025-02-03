@@ -83,6 +83,17 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 
+//middleware sets from  each incoming requests cookies token into authorization header
+app.Use(async (context, next) =>
+{
+    if (context.Request.Cookies.TryGetValue("access_token", out var token))
+    {
+        context.Request.Headers.Append("Authorization", $"Bearer {token}");
+    }
+    await next();
+});
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

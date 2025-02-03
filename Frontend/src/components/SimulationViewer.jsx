@@ -15,18 +15,20 @@ const SimulationViewer = () => {
         const response = await fetch("/api/auth/guest", {
           // Ha proxy van beállítva, elég csak "/api"
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          // headers: {
+          //   "Content-Type": "application/json",
+          // },
+          credentials: "include",
         });
 
         if (!response.ok) {
           throw new Error(`Hiba: ${response.status}`);
         }
 
-        const data = await response.json();
-        setToken(data.token);
-        console.log("Vendég token:", data.token);
+        // const data = await response.json();
+        // setToken(data.token);
+        // console.log("Vendég token:", data.token);
+        console.log("Vendég token sikeresen lekérve! cookieba mentve");
       } catch (error) {
         console.error("Token lekérés sikertelen:", error);
       }
@@ -38,7 +40,8 @@ const SimulationViewer = () => {
   const startConnection = () => {
     const newConnection = new signalR.HubConnectionBuilder()
       .withUrl("/simulationHub", {
-        accessTokenFactory: () => token, // Itt adjuk át a JWT tokent!
+        //accessTokenFactory: () => token, // Itt adjuk át a JWT tokent!
+        withCredentials: true,
       })
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Information)
@@ -65,6 +68,10 @@ const SimulationViewer = () => {
         .invoke("JoinSimulation", simulationId)
         .then(() => console.log(`Csatlakoztál a ${simulationId} csoporthoz.`))
         .catch((err) => console.error("Hiba a csatlakozás során: ", err));
+
+      connection.on("JoinedSimulation", (simulationId) => {
+        console.log(`Sikeresen csatlakoztál a ${simulationId} csoporthoz!`);
+      });
 
       connection.on("ReceiveGameState", (state) => {
         setSimulationData(JSON.stringify(state, null, 2));

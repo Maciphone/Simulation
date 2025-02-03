@@ -56,7 +56,18 @@ app.UseAuthorization();
 app.UseCors("AllowAllOrigins");
 
 
-app.MapPost("/api/auth/guest", (IConfiguration config) =>
+//middleware sets from  each incoming requests cookies token into authorization header
+app.Use(async (context, next) =>
+{
+    if (context.Request.Cookies.TryGetValue("access_token", out var token))
+    {
+        context.Request.Headers.Append("Authorization", $"Bearer {token}");
+    }
+    await next();
+});
+
+
+app.MapPost("/api/auth/guest", (IConfiguration config, HttpContext httpContext) =>
 {
     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]));
     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -70,7 +81,21 @@ app.MapPost("/api/auth/guest", (IConfiguration config) =>
     );
 
     var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-    return Results.Ok(new { token = tokenString });
+    
+    //simple jwt token authentication
+    // return Results.Ok(new { token = tokenString });
+    //  });
+    
+    //add jwt token to cookie
+    httpContext.Response.Cookies.Append("access_token", tokenString, new CookieOptions
+    {
+        HttpOnly = true, //against xss
+        Secure = true, //https is needed
+        SameSite = SameSiteMode.Strict, //against CSRF
+        Expires = DateTime.UtcNow.AddMinutes(30)
+    } );
+    
+    return Results.Ok(new {message = "access guaranted" });
 });
 
 
