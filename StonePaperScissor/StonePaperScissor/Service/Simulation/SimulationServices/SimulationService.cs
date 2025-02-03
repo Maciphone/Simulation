@@ -30,6 +30,23 @@ public class SimulationService : ISimulatorService
         _simulationStorage.AddSimulation(simulationId, simulator);
         return simulationId;
     }
+    
+    public string InitialSavedSimulation(int rows, int columns, List<Item> savedItems)
+    {
+        var simulationId = Guid.NewGuid().ToString();
+        var simulator = _initialiser.ReloadSavedSimulator(rows, columns, savedItems);
+        simulator.SetSimulationId(simulationId);
+        if (simulator == null)
+        {
+            throw new InvalidOperationException("Failed to initialize simulation.");
+        }
+
+        _simulationStorage.AddSimulation(simulationId, simulator);
+        return simulationId;
+        
+        
+       
+    }
 
 
     public void StartSimulation(string simulationId)
@@ -67,5 +84,6 @@ public class SimulationService : ISimulatorService
         var simulator = _simulationStorage.GetSimulation(simulationId);
         simulator.SetSimulationId(simulationId);
     }
-    
+
+ 
 }

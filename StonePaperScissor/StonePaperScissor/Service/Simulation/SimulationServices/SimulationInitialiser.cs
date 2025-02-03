@@ -27,6 +27,13 @@ public class SimulationInitialiser : IInitialiser
         return simulatorFactory.CreateSimulator(row,columns,startItems);
     }
 
+    public ISimulator ReloadSavedSimulator(int row, int columns, List<Item> items)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var simulatorFactory = scope.ServiceProvider.GetRequiredService<ISimulatorFactory>();
+        return simulatorFactory.CreateSimulator(row,columns,items);
+    }
+
     private List<Item> CreateAllItems(int itemCount, int row, int columns)
     {
         List<Position> startPositions = CreateStartPosition(row, columns);

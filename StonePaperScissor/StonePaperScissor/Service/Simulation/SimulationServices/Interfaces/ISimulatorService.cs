@@ -11,4 +11,5 @@ public interface ISimulatorService
     void SetSimulationId(string simulationId);
 
 
+    string InitialSavedSimulation(int rows, int columns, List<Item> savedItems);
 }

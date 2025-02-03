@@ -23,7 +23,14 @@ public class SimulationController : ControllerBase
         
         return Ok(new { SimulationId = simulationId });
         
-
+    }
+    
+    [HttpPost("reloadSavedSimulation")]
+    public IActionResult StartSavedSimulation(int rows, int columns, List<Item> savedItems)
+    {
+        var simulationId = _simulatorService.InitialSavedSimulation(rows, columns, savedItems);
+        
+        return Ok(new { SimulationId = simulationId });
         
     }
     
