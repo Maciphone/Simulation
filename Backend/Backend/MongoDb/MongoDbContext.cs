@@ -13,12 +13,15 @@ public class MongoDbContext
     public MongoDbContext(IOptions<MongoDbSettings> settings)
     {
         var mongoSettings = settings.Value;
-        var client = new MongoClient(mongoSettings.ConnectionString);
-        _database = client.GetDatabase(mongoSettings.DatabaseName);
+        var client = new MongoClient(mongoSettings.ConnectionString);//appsettings.json
+        _database = client.GetDatabase(mongoSettings.DatabaseName); //appsettings.json
 
         _usersDataCollectionName = mongoSettings.UsersDataCollectionName;
         _simulationStateCollectionName = mongoSettings.SimulationStateCollectionName;
     }
+    
+    public IMongoDatabase Database => _database;
+
 
     public IMongoCollection<UserData> UsersData => _database.GetCollection<UserData>(_usersDataCollectionName);
     public IMongoCollection<SimulationState> SimulationStates => _database.GetCollection<SimulationState>(_simulationStateCollectionName);

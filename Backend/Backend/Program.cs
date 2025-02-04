@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Backend.MongoDb;
+using Backend.Service.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -20,8 +21,21 @@ builder.Services.AddSwaggerGen();
 //identity.MongoDbCore
 //
 
+
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
 builder.Services.AddSingleton<MongoDbContext>();
+
+builder.Services.AddSingleton<IUserRepository>(sp =>
+{
+    var dbContext = sp.GetRequiredService<MongoDbContext>();
+    return new UserRepository(dbContext.Database, "UserData");
+});
+
+builder.Services.AddSingleton<ISimulationStateRepository>(sp =>
+{
+    var dbContext = sp.GetRequiredService<MongoDbContext>();
+    return new SimulationStateRepository(dbContext.Database, "SimulationStates", dbContext.SimulationStates);
+});
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
