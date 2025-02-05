@@ -5,6 +5,8 @@ using Backend.MongoDb;
 using Backend.Service.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,6 @@ builder.Services.AddSwaggerGen();
 //identity.MongoDbCore
 //
 
-
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
 builder.Services.AddSingleton<MongoDbContext>();
 
@@ -36,6 +37,12 @@ builder.Services.AddSingleton<ISimulationStateRepository>(sp =>
     var dbContext = sp.GetRequiredService<MongoDbContext>();
     return new SimulationStateRepository(dbContext.Database, "SimulationStates", dbContext.SimulationStates);
 });
+
+//check db connection
+
+TestDb();
+CheckDb();
+
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -126,3 +133,40 @@ app.MapPost("/api/auth/guest", (IConfiguration config, HttpContext httpContext) 
 
 app.Run();
 
+async void TestDb()
+{
+    var dbContext = builder.Services.BuildServiceProvider().GetRequiredService<MongoDbContext>();
+    var usersCollection = dbContext.Database.GetCollection<BsonDocument>("Users");
+
+    var testUser = new BsonDocument
+    {
+        { "name", "Test User" },
+        { "email", "test@example.com" },
+        { "gamesPlayed", 0 }
+    };
+
+    await usersCollection.InsertOneAsync(testUser);
+
+    Console.WriteLine("Tesztfelhasználó sikeresen létrehozva!");
+}
+
+void CheckDb()
+{
+
+
+    var dbContext = builder.Services.BuildServiceProvider().GetRequiredService<MongoDbContext>();
+
+    try
+    {
+        var databases = dbContext.Database.Client.ListDatabaseNames().ToList();
+        Console.WriteLine("Sikeres MongoDB kapcsolat! Elérhető adatbázisok:");
+        foreach (var db in databases)
+        {
+            Console.WriteLine($"- {db}");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"MongoDB kapcsolat hiba: {ex.Message}");
+    }
+}

@@ -15,6 +15,7 @@ public class SimulationState
 
     [BsonElement("timestamp")]
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    
 
     [BsonElement("items")]
     public string ItemString { get; set; }
