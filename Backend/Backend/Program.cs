@@ -1,7 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Backend.Controller;
 using Backend.MongoDb;
+using Backend.Service.Authentication;
 using Backend.Service.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -12,12 +14,47 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddUserSecrets<Program>();
 
+//config teszt
+var config = builder.Configuration;
+Console.WriteLine($"Simulation API beállítások: {config["SimulationApi:BaseUrl"]}");
+
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//http client for communication with simulations api
+builder.Services.AddHttpClient<BackendSimulationController>();
 
+
+//authentication cookie append on http client in backendSimulatorController for authentication in simulations api
+builder.Services.AddHttpClient("SimulationApiClient", client =>
+    {
+        var simulationApiBaseUrl = builder.Configuration["SimulationApi:BaseUrl"] 
+                                   ?? "http://localhost:5050/api/simulation";
+    
+        client.BaseAddress = new Uri(simulationApiBaseUrl);
+    })
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        var simulationApiBaseUrl = builder.Configuration["SimulationApi:BaseUrl"] 
+                                   ?? "http://localhost:5050/api/simulation";
+        var handler = new HttpClientHandler();
+        handler.UseCookies = true;
+        handler.CookieContainer = new System.Net.CookieContainer();
+
+        
+        var simulationApiUri = new Uri(simulationApiBaseUrl);
+        var cookieName = builder.Configuration["SimulationApi:CookieName"];
+        var backendAuthToken = GenerateAuthTokenSimulation.GenerateBackendAuthToken(builder.Configuration);
+        
+        handler.CookieContainer.Add(simulationApiUri, new System.Net.Cookie(cookieName, backendAuthToken));
+
+        return handler;
+    });
+
+builder.Services.AddControllers();
 //Mongo nuggets:
 //MongoDb.Driver
 //identity.MongoDbCore
@@ -72,6 +109,9 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 
+
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -87,7 +127,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors("AllowAllOrigins");
 
-
+app.MapControllers();
 //middleware sets from  each incoming requests cookies token into authorization header
 app.Use(async (context, next) =>
 {

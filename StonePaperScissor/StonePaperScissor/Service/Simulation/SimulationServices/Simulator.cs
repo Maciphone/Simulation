@@ -94,6 +94,10 @@ public class Simulator :ISimulator
         //_dotGameStatistic.ShowStatistic(_items);
     }
 
+    public void StartPlayOneGame()
+    {
+        PlayOneGame();
+    }
     
     public async void PlayOneGame()
     {

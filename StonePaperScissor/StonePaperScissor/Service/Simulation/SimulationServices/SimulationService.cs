@@ -57,7 +57,7 @@ public class SimulationService : ISimulatorService
             throw new InvalidOperationException($"Simulation with ID {simulationId} not found.");
         }
 
-        simulator.PlayOneGame();
+        simulator.StartPlayOneGame();
 
     }
 

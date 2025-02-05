@@ -10,4 +10,5 @@ public interface ISimulator
 
     void End();
     void SetSimulationId(string simulationId);
+    void StartPlayOneGame();
 }

@@ -1,10 +1,14 @@
 using System.Collections;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StonePaperScissor.Dto;
 using StonePaperScissor.Service.Simulation;
 using StonePaperScissor.Service.Simulation.SimulationServices.Interfaces;
 
 namespace StonePaperScissor.Controller;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class SimulationController : ControllerBase
@@ -17,42 +21,49 @@ public class SimulationController : ControllerBase
     }
 
     [HttpPost("initialise")]
-    public IActionResult StartSimulation(int rows, int columns, int itemCount)
+    public IActionResult StartSimulation([FromBody] InitializeSimulationRequest request)
     {
-        var simulationId = _simulatorService.InitialiseSimulation(rows, columns, itemCount);
+        var simulationId = _simulatorService.InitialiseSimulation(request.Rows, request.Columns, request.ItemCount);
         
         return Ok(new { SimulationId = simulationId });
         
     }
     
     [HttpPost("reloadSavedSimulation")]
-    public IActionResult StartSavedSimulation(int rows, int columns, List<Item> savedItems)
+    public IActionResult StartSavedSimulation([FromBody] LoadSavedSimulationRequest request)
     {
-        var simulationId = _simulatorService.InitialSavedSimulation(rows, columns, savedItems);
+        //
+        var items =JsonSerializer.Deserialize<List<Item>>(request.SavedItems);
+        
+        if (items == null)
+        {
+            return BadRequest(new { message = "Invalid simulation state data" });
+        }
+        var simulationId = _simulatorService.InitialSavedSimulation(request.Rows, request.Columns, items);
         
         return Ok(new { SimulationId = simulationId });
         
     }
     
     [HttpPost("play")]
-    public IActionResult PlayOneGame(string simulationId)
+    public IActionResult PlayOneGame([FromBody] SimulationIdRequest simulationIdRequest)
     {
        
-       _simulatorService.StartSimulation(simulationId);
+       _simulatorService.StartSimulation(simulationIdRequest.SimulationId);
        return Ok();
     }
     
     [HttpPost("pause")]
-    public IActionResult StopGame(string simulationId)
+    public IActionResult StopGame([FromBody] SimulationIdRequest simulationIdRequest)
     {
-        _simulatorService.PauseSimulation(simulationId);
+        _simulatorService.PauseSimulation(simulationIdRequest.SimulationId);
         return Ok();
     }
     
     [HttpPost("resume")]
-    public IActionResult ResumeGame(string simulationId)
+    public IActionResult ResumeGame([FromBody] SimulationIdRequest simulationIdRequest)
     {
-        _simulatorService.ResumeSimulation( simulationId);
+        _simulatorService.ResumeSimulation( simulationIdRequest.SimulationId);
         return Ok();
     }
     

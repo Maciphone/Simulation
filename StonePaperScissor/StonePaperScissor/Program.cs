@@ -66,6 +66,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     context.Token = accessToken;
                 }
+                else
+                {
+                    // 🔥 Backend API esetén a `backend_auth` cookie-t használjuk
+                    if (context.Request.Cookies.TryGetValue("backend_auth", out var backendAuthToken))
+                    {
+                        context.Token = backendAuthToken;
+                    }
+                }
                 return Task.CompletedTask;
             }
         };
@@ -80,13 +88,37 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 
+//middleware sets from  each incoming requests cookies token into authorization header from frontend
+// app.Use(async (context, next) =>
+// {
+//     if (context.Request.Cookies.TryGetValue("access_token", out var token))
+//     {
+//         context.Request.Headers.Append("Authorization", $"Bearer {token}");
+//     }
+//     await next();
+// });
+
 //middleware sets from  each incoming requests cookies token into authorization header
+//from frontend + backend api
 app.Use(async (context, next) =>
 {
-    if (context.Request.Cookies.TryGetValue("access_token", out var token))
+   
+    if (context.Request.Path.StartsWithSegments("/simulationHub"))
     {
-        context.Request.Headers.Append("Authorization", $"Bearer {token}");
+        if (context.Request.Cookies.TryGetValue("access_token", out var jwtToken))
+        {
+            context.Request.Headers.Append("Authorization", $"Bearer {jwtToken}");
+        }
     }
+    else
+    {
+        var cookieName = builder.Configuration["SimulationApi:CookieName"];
+        if (context.Request.Cookies.TryGetValue(cookieName, out var backendAuthToken))
+        {
+            context.Request.Headers.Append("Authorization", $"Bearer {backendAuthToken}");
+        }
+    }
+
     await next();
 });
 
