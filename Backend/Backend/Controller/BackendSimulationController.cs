@@ -44,7 +44,7 @@ public class BackendSimulationController : ControllerBase
     {
         // Backend API nem alakítja át az ItemString-et, csak továbbítja!
         var response = await _httpClient.PostAsJsonAsync($"{_simulationApiUrl}/reloadSavedSimulation", request);
-        
+        //should return simulationId
         if (!response.IsSuccessStatusCode)
         {
             return StatusCode((int)response.StatusCode, await response.Content.ReadAsStringAsync());

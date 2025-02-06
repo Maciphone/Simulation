@@ -29,6 +29,7 @@ builder.Services.AddHttpClient<BackendSimulationController>();
 
 
 //authentication cookie append on http client in backendSimulatorController for authentication in simulations api
+// in backendSimulationController use _httpClient = httpClientFactory.CreateClient("SimulationApiClient"), pass factory in constructor
 builder.Services.AddHttpClient("SimulationApiClient", client =>
     {
         var simulationApiBaseUrl = builder.Configuration["SimulationApi:BaseUrl"] 
@@ -43,11 +44,10 @@ builder.Services.AddHttpClient("SimulationApiClient", client =>
         var handler = new HttpClientHandler();
         handler.UseCookies = true;
         handler.CookieContainer = new System.Net.CookieContainer();
-
-        
+        var role = builder.Configuration["SimulationApi:Role"];
         var simulationApiUri = new Uri(simulationApiBaseUrl);
         var cookieName = builder.Configuration["SimulationApi:CookieName"];
-        var backendAuthToken = GenerateAuthTokenSimulation.GenerateBackendAuthToken(builder.Configuration);
+        var backendAuthToken = GenerateAuthTokenSimulation.GenerateAuthToken(builder.Configuration, role);
         
         handler.CookieContainer.Add(simulationApiUri, new System.Net.Cookie(cookieName, backendAuthToken));
 
@@ -114,6 +114,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+//exception handler for all mongodb exeptions
+app.UseMiddleware<MongoExceptionHandlerMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -128,7 +131,7 @@ app.UseAuthorization();
 app.UseCors("AllowAllOrigins");
 
 app.MapControllers();
-//middleware sets from  each incoming requests cookies token into authorization header
+//middleware sets from  each INCOMING requests cookies token into authorization header
 app.Use(async (context, next) =>
 {
     if (context.Request.Cookies.TryGetValue("access_token", out var token))
@@ -143,23 +146,23 @@ app.MapPost("/api/auth/guest", (IConfiguration config, HttpContext httpContext) 
 {
     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]));
     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-    var token = new JwtSecurityToken(
-        issuer: config["Jwt:Issuer"],
-        audience: config["Jwt:Audience"],
-        claims: new List<Claim> { new Claim("role", "guest") },
-        expires: DateTime.UtcNow.AddMinutes(30), // 
-        signingCredentials: creds
-    );
-
-    var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+    var role = config["Jwt:GuestRole"];
+    var token = GenerateAuthTokenSimulation.GenerateAuthToken(builder.Configuration, role);
+    // var token = new JwtSecurityToken(
+    //     issuer: config["Jwt:Issuer"],
+    //     audience: config["Jwt:Audience"],
+    //     claims: new List<Claim> { new Claim("role", "guest") },
+    //     expires: DateTime.UtcNow.AddMinutes(30), // 
+    //     signingCredentials: creds
+    // );
+    //var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
     
     //simple jwt token authentication
     // return Results.Ok(new { token = tokenString });
     //  });
     
-    //add jwt token to cookie
-    httpContext.Response.Cookies.Append("access_token", tokenString, new CookieOptions
+    //add jwt token to cookies and pass to response headers
+    httpContext.Response.Cookies.Append("access_token", token, new CookieOptions
     {
         HttpOnly = true, //against xss
         Secure = true, //https is needed

@@ -1,3 +1,4 @@
+using Backend.Dto;
 using Backend.MongoDb.Model;
 using MongoDB.Driver;
 
@@ -11,26 +12,37 @@ public class UserRepository : MongoRepository<UserData>, IUserRepository
     {
     }
 
-   public async Task IncrementWinsAsync(string userId, string type)
+   public async Task<bool> IncrementWinsAsync(string userId, ItemType type)
     {
         var filter = Builders<UserData>.Filter.Eq(u => u.Id, userId);
         UpdateDefinition<UserData> update;
         
-        switch (type.ToLower())
+        switch (type)
         {
-            case "stone":
+            case ItemType.Stone:
                 update = Builders<UserData>.Update.Inc(u => u.GamesWin.Stone, 1);
                 break;
-            case "scissor":
+            case ItemType.Scissor:
                 update = Builders<UserData>.Update.Inc(u => u.GamesWin.Scissor, 1);
                 break;
-            case "paper":
+            case ItemType.Paper:
                 update = Builders<UserData>.Update.Inc(u => u.GamesWin.Paper, 1);
                 break;
             default:
-                return;
+                return false;
         }
-        await _usersCollection.UpdateOneAsync(filter, update);
+        var result = await _usersCollection.UpdateOneAsync(filter, update);
+        return result.MatchedCount > 0;
 
+    }
+   
+    public async Task<bool> AddSimulationStateIdAsync(string userId, string simulationStateId)
+    {
+        var filter = Builders<UserData>.Filter.Eq(u => u.Id, userId);
+        var update = Builders<UserData>.Update.Push(u => u.SimulationStateIds, simulationStateId);
+
+        var result = await _usersCollection.UpdateOneAsync(filter, update);
+
+        return result.ModifiedCount > 0;
     }
 }

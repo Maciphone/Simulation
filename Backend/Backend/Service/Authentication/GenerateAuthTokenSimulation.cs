@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
@@ -8,7 +9,7 @@ public static class GenerateAuthTokenSimulation
 {
     
     public 
-        static string GenerateBackendAuthToken(IConfiguration configuration)
+        static string GenerateAuthToken(IConfiguration configuration, string role)
     {
         var secret = configuration["Jwt:Key"];
         var issuer = configuration["Jwt:Issuer"];
@@ -20,9 +21,16 @@ public static class GenerateAuthTokenSimulation
             issuer: issuer,
             audience: audience,
             expires: DateTime.UtcNow.AddHours(1),
+            claims: CreateRoles(role),
             signingCredentials: creds
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private static IEnumerable<Claim> CreateRoles(string role)
+    {
+        return new List<Claim> { new Claim(ClaimTypes.Role, role) };
+        
     }
 }

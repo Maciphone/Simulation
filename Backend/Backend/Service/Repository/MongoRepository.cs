@@ -28,7 +28,8 @@ public class
 
     public async Task CreateAsync(T entity)
     {
-        await _collection.InsertOneAsync(entity);
+         await _collection.InsertOneAsync(entity); //void no entity returns, throws ex 
+        
     }
 
     public async Task UpdateAsync(string id, T entity)
@@ -37,9 +38,12 @@ public class
         await _collection.ReplaceOneAsync(filter, entity);
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string id)
     {
         var filter = Builders<T>.Filter.Eq("_id", ObjectId.Parse(id));
-        await _collection.DeleteOneAsync(filter);
+        var result = await _collection.DeleteOneAsync(filter); // return count of deleted entities
+
+        return result.DeletedCount > 0; 
     }
+
 }
