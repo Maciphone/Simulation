@@ -1,5 +1,7 @@
 using Backend.Dto;
 using Backend.MongoDb.Model;
+using Microsoft.AspNetCore.Http.HttpResults;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Backend.Service.Repository;
@@ -10,22 +12,33 @@ public class UserRepository : MongoRepository<UserData>, IUserRepository
 
     public UserRepository(IMongoDatabase database, string collectionName) : base(database, collectionName)
     {
+        if (database == null)
+            throw new ArgumentNullException(nameof(database));
+        if (string.IsNullOrEmpty(collectionName))
+            throw new ArgumentNullException(nameof(collectionName));
+
+        _usersCollection = database.GetCollection<UserData>(collectionName);
     }
 
-   public async Task<bool> IncrementWinsAsync(string userId, ItemType type)
+   public async Task<bool> IncrementWinsAsync(string userId, string type)
     {
         var filter = Builders<UserData>.Filter.Eq(u => u.Id, userId);
+        var user = await _usersCollection.Find(filter).FirstOrDefaultAsync();
+        if (user == null)
+        {
+           Console.WriteLine("itt a hiba");
+        }
         UpdateDefinition<UserData> update;
         
         switch (type)
         {
-            case ItemType.Stone:
+            case "stone":
                 update = Builders<UserData>.Update.Inc(u => u.GamesWin.Stone, 1);
                 break;
-            case ItemType.Scissor:
+            case "scissor":
                 update = Builders<UserData>.Update.Inc(u => u.GamesWin.Scissor, 1);
                 break;
-            case ItemType.Paper:
+            case "paper":
                 update = Builders<UserData>.Update.Inc(u => u.GamesWin.Paper, 1);
                 break;
             default:

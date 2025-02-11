@@ -106,7 +106,8 @@ public class UserDataController : ControllerBase
     }
 
     [HttpPost("updateStatistic")]
-    public async Task<IActionResult> UpdateUserStatistic(string userId, ItemType type)
+    public async Task<IActionResult> UpdateUserStatistic(
+      string userId, string type)
     {
         try
         {

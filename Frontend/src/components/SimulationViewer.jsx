@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import * as signalR from "@microsoft/signalr";
 import SimulationAnimation from "./SimulationAnimation";
+import { useParams } from "react-router-dom";
 
 const SimulationViewer = () => {
-  const [simulationId, setSimulationId] = useState("waiting for id");
+  //const [simulationId, setSimulationId] = useState("waiting for id");
   const [simulationData, setSimulationData] = useState("");
   const [connection, setConnection] = useState(null);
   const [connect, setConect] = useState(false);
   const [token, setToken] = useState("");
+
+  const { simulationId } = useParams();
+  //console.log("simulationId:", simulationId);
 
   useEffect(() => {
     const getToken = async () => {
@@ -62,8 +66,28 @@ const SimulationViewer = () => {
     };
   };
 
+  const fetchStartSimulation = async () => {
+    try {
+      const response = await fetch("/api/BackendSimulation/play", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ simulationId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Hiba: ${response.status}`);
+      }
+
+      console.log("Szimuláció elindítva!");
+    } catch (error) {
+      console.error("Szimuláció indítás sikertelen:", error);
+    }
+  };
+
   const joinSimulation = () => {
-    if (connection) {
+    if (connection && simulationId) {
       connection
         .invoke("JoinSimulation", simulationId)
         .then(() => console.log(`Csatlakoztál a ${simulationId} csoporthoz.`))
@@ -87,18 +111,14 @@ const SimulationViewer = () => {
       <button onClick={startConnection} style={{ padding: "5px 10px" }}>
         Connect simulation
       </button>
-
-      <div style={{ marginBottom: "10px" }}>
-        <label htmlFor="simulationId">Simulation ID: </label>
-        <input
-          type="text"
-          id="simulationId"
-          value={simulationId}
-          onChange={(e) => setSimulationId(e.target.value)}
-          style={{ marginRight: "10px" }}
-        />
+      <div>
         <button onClick={joinSimulation} style={{ padding: "5px 10px" }}>
           Join Simulation
+        </button>
+      </div>
+      <div>
+        <button onClick={fetchStartSimulation} style={{ padding: "5px 10px" }}>
+          Start Simulation
         </button>
       </div>
       <pre

@@ -41,11 +41,12 @@ builder.Services.AddHttpClient("SimulationApiClient", client =>
     {
         var simulationApiBaseUrl = builder.Configuration["SimulationApi:BaseUrl"] 
                                    ?? "http://localhost:5050/api/simulation";
+        var simulationApiUri = new Uri(simulationApiBaseUrl);
+        
         var handler = new HttpClientHandler();
         handler.UseCookies = true;
         handler.CookieContainer = new System.Net.CookieContainer();
         var role = builder.Configuration["SimulationApi:Role"];
-        var simulationApiUri = new Uri(simulationApiBaseUrl);
         var cookieName = builder.Configuration["SimulationApi:CookieName"];
         var backendAuthToken = GenerateAuthTokenSimulation.GenerateAuthToken(builder.Configuration, role);
         
@@ -77,7 +78,7 @@ builder.Services.AddSingleton<ISimulationStateRepository>(sp =>
 
 //check db connection
 
-TestDb();
+//TestDb();
 CheckDb();
 
 
@@ -115,7 +116,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 //exception handler for all mongodb exeptions
-app.UseMiddleware<MongoExceptionHandlerMiddleware>();
+//app.UseMiddleware<MongoExceptionHandlerMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

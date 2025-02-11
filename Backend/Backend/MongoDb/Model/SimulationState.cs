@@ -8,7 +8,7 @@ public class SimulationState
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = null!;
+    public string? Id { get; set; } = null!;
 
     [BsonElement("simulationId")]
     public string SimulationId { get; set; } = null!;

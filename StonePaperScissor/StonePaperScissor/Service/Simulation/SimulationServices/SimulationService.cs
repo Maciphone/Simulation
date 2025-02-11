@@ -42,6 +42,7 @@ public class SimulationService : ISimulatorService
         }
 
         _simulationStorage.AddSimulation(simulationId, simulator);
+        _simulator.OpenSocketStream(simulationId);
         return simulationId;
         
         

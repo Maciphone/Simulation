@@ -5,6 +5,6 @@ namespace Backend.Service.Repository;
 
 public interface IUserRepository : IRepository<UserData>
 {
-    Task<bool> IncrementWinsAsync(string userId, ItemType type);
+    Task<bool> IncrementWinsAsync(string userId, string type);
     Task<bool> AddSimulationStateIdAsync(string userId, string simulationStateId);
 }
