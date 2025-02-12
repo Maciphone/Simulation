@@ -10,4 +10,6 @@ public interface ISimulator
 
     void End();
     void SetSimulationId(string simulationId);
+    void StartPlayOneGame();
+    void OpenSocketStream(string simulationId);
 }

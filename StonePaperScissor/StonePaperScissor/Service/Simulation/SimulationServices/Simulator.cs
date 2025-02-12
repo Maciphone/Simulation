@@ -62,6 +62,13 @@ public class Simulator :ISimulator
         _items.ForEach(e=>e.Type=ItemType.Paper);
     }
 
+    public async void OpenSocketStream(string simulationId)
+    {
+        
+        await _hubContext.Clients.Group(_simulationId).SendAsync("ReceiveGameState", "see ya players");
+        
+    }
+
 
     // _items.Where(item => item.Alive).To_items()
         //     .ForEach(item => item.Move());  // nullreference hiba
@@ -90,10 +97,14 @@ public class Simulator :ISimulator
        
         TransformNewItems();
    
-       // _dotVisualiser.SimulationVisualisation(_items, X, Y);
+        _dotVisualiser.SimulationVisualisation(_items, X, Y);
         //_dotGameStatistic.ShowStatistic(_items);
     }
 
+    public void StartPlayOneGame()
+    {
+        PlayOneGame();
+    }
     
     public async void PlayOneGame()
     {
