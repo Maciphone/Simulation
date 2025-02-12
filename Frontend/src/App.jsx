@@ -1,8 +1,8 @@
 import { useState } from "react";
 import "./App.css";
-import SimulationViewer from "./components/SimulationViewer";
+import SimulationViewer from "./pages/SimulationViewer";
 import { Routes, Route } from "react-router-dom";
-import SimulationHandling from "./components/SimulationHandling";
+import SimulationHandling from "./pages/SimulationHandling";
 
 function App() {
   return (

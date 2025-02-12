@@ -9,7 +9,7 @@ public class UserDataDto
     public string Name { get; set; } = null!;
 
     [BsonElement("simulationStateIds")]
-    public List<string> SimulationStateIds { get; set; } = new();
+    public List<string>? SimulationStateIds { get; set; } = new();
 
     [BsonElement("gamesPlayed")]
     public int GamesPlayed { get; set; }

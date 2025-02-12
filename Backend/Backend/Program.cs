@@ -3,9 +3,11 @@ using System.Security.Claims;
 using System.Text;
 using Backend.Controller;
 using Backend.MongoDb;
+using Backend.MongoDb.Model;
 using Backend.Service.Authentication;
 using Backend.Service.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -59,31 +61,51 @@ builder.Services.AddControllers();
 //Mongo nuggets:
 //MongoDb.Driver
 //identity.MongoDbCore
+//aspnetcore.identity.entityframeworkcore
 //
 
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
 builder.Services.AddSingleton<MongoDbContext>();
 
+
+builder.Services.AddSingleton<IMongoDatabase>(sp =>
+{
+    var context = sp.GetRequiredService<MongoDbContext>();
+    return context.Database;
+});
+
 builder.Services.AddSingleton<IUserRepository>(sp =>
 {
-    var dbContext = sp.GetRequiredService<MongoDbContext>();
-    return new UserRepository(dbContext.Database, "UserData");
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    return new UserRepository(database, "UserData");//UsersData
 });
 
 builder.Services.AddSingleton<ISimulationStateRepository>(sp =>
 {
-    var dbContext = sp.GetRequiredService<MongoDbContext>();
-    return new SimulationStateRepository(dbContext.Database, "SimulationStates", dbContext.SimulationStates);
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    return new SimulationStateRepository(database, "SimulationStates", database.GetCollection<SimulationState>("SimulationStates"));
 });
+
+// Identity beállítása MongoDB-re
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
+    .AddMongoDbStores<ApplicationUser, ApplicationRole, string>(
+        builder.Configuration["MongoDbSettings:ConnectionString"],
+        builder.Configuration["MongoDbSettings:DatabaseName"]
+    )
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
 
 //check db connection
 
 //TestDb();
-CheckDb();
+//CheckDb();
 
-
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -97,6 +119,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
+
+
+
+// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//     .AddJwtBearer(options =>
+//     {
+//         options.TokenValidationParameters = new TokenValidationParameters
+//         {
+//             ValidateIssuer = true,
+//             ValidateAudience = true,
+//             ValidateLifetime = true,
+//             ValidateIssuerSigningKey = true,
+//             ValidIssuer = builder.Configuration["Jwt:Issuer"],
+//             ValidAudience = builder.Configuration["Jwt:Audience"],
+//             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+//         };
+//     });
 
 builder.Services.AddAuthorization();
 
@@ -115,6 +154,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
+    //await TestDb(dbContext);
+    CheckDb(dbContext);
+}
+
 //exception handler for all mongodb exeptions
 //app.UseMiddleware<MongoExceptionHandlerMiddleware>();
 
@@ -132,7 +178,8 @@ app.UseAuthorization();
 app.UseCors("AllowAllOrigins");
 
 app.MapControllers();
-//middleware sets from  each INCOMING requests cookies token into authorization header
+//middleware sets from  ALL!
+//INCOMING requests cookies token into authorization header
 app.Use(async (context, next) =>
 {
     if (context.Request.Cookies.TryGetValue("access_token", out var token))
@@ -177,10 +224,10 @@ app.MapPost("/api/auth/guest", (IConfiguration config, HttpContext httpContext) 
 
 app.Run();
 
-async void TestDb()
+async Task TestDb(MongoDbContext mongoDbContext)
 {
-    var dbContext = builder.Services.BuildServiceProvider().GetRequiredService<MongoDbContext>();
-    var usersCollection = dbContext.Database.GetCollection<BsonDocument>("Users");
+    
+    var usersCollection = mongoDbContext.Database.GetCollection<BsonDocument>("Users");
 
     var testUser = new BsonDocument
     {
@@ -194,15 +241,12 @@ async void TestDb()
     Console.WriteLine("Tesztfelhasználó sikeresen létrehozva!");
 }
 
-void CheckDb()
+async Task CheckDb(MongoDbContext mongoDbContext)
 {
-
-
-    var dbContext = builder.Services.BuildServiceProvider().GetRequiredService<MongoDbContext>();
-
+    
     try
     {
-        var databases = dbContext.Database.Client.ListDatabaseNames().ToList();
+        var databases = mongoDbContext.Database.Client.ListDatabaseNames().ToList();
         Console.WriteLine("Sikeres MongoDB kapcsolat! Elérhető adatbázisok:");
         foreach (var db in databases)
         {
