@@ -1,25 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as signalR from "@microsoft/signalr";
-import SimulationAnimation from "./SimulationAnimation";
 import { useParams } from "react-router-dom";
+import * as PIXI from "pixi.js";
+import { Application, Graphics } from "pixi.js";
 
-const SimulationViewer = () => {
-  //const [simulationId, setSimulationId] = useState("waiting for id");
+const SimulationViewer_copy = () => {
   const { simulationId } = useParams();
-  const [simulationData, setSimulationData] = useState("");
   const [connection, setConnection] = useState(null);
-  const [connect, setConect] = useState(false);
-  const [token, setToken] = useState("");
+  const pixiContainerRef = useRef(null);
+  const pixiAppRef = useRef(null);
+  const pixiFlag = useRef(false);
 
   useEffect(() => {
     const getToken = async () => {
       try {
         const response = await fetch("/api/auth/guest", {
-          // Ha proxy van beállítva, elég csak "/api"
           method: "POST",
-          // headers: {
-          //   "Content-Type": "application/json",
-          // },
           credentials: "include",
         });
 
@@ -27,9 +23,6 @@ const SimulationViewer = () => {
           throw new Error(`Hiba: ${response.status}`);
         }
 
-        // const data = await response.json();
-        // setToken(data.token);
-        // console.log("Vendég token:", data.token);
         console.log("Vendég token sikeresen lekérve! cookieba mentve");
       } catch (error) {
         console.error("Token lekérés sikertelen:", error);
@@ -39,10 +32,21 @@ const SimulationViewer = () => {
     getToken();
   }, []);
 
+  useEffect(() => {
+    async function init() {
+      if (pixiFlag.current) return; // otherwise react appends it twice, in strict mode
+      pixiFlag.current = true;
+      const app = new Application();
+      pixiAppRef.current = app;
+      await app.init({ background: "#AA0000", width: 1000, height: 1000 });
+      pixiContainerRef.current.appendChild(app.canvas);
+    }
+    init();
+  }, []);
+
   const startConnection = () => {
     const newConnection = new signalR.HubConnectionBuilder()
       .withUrl("/simulationHub", {
-        //accessTokenFactory: () => token, // Itt adjuk át a JWT tokent!
         withCredentials: true,
       })
       .withAutomaticReconnect()
@@ -96,11 +100,30 @@ const SimulationViewer = () => {
       });
 
       connection.on("ReceiveGameState", (state) => {
-        setSimulationData(JSON.stringify(state, null, 2));
+        const gameState = JSON.parse(state);
+        updatePixiScene(gameState);
+        // console.log("Új játékállapot érkezett:", gameState);
       });
     } else {
       console.error("A kapcsolat még nincs készen!");
     }
+  };
+
+  const updatePixiScene = (gameState) => {
+    const pixiGraphics = new Graphics();
+    pixiAppRef.current.stage.removeChildren();
+    pixiGraphics.clear();
+
+    // Add new items to the scene
+    gameState.forEach((item) => {
+      pixiGraphics
+        .circle(item.Position.X * 10, item.Position.Y * 10, 10)
+        .fill(
+          item.Type === 1 ? 0xff0000 : item.Type === 2 ? 0x0000ff : 0x00ff00
+        );
+      pixiAppRef.current.stage.addChild(pixiGraphics);
+      // graphics.endFill();
+    });
   };
 
   return (
@@ -119,17 +142,12 @@ const SimulationViewer = () => {
           Start Simulation
         </button>
       </div>
-      <pre
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          overflowX: "auto",
-        }}
-      >
-        {simulationData || "Nincs még játékállapot..."}
-      </pre>
+      <div
+        ref={pixiContainerRef}
+        style={{ border: "1px solid black", width: "1000px", height: "1000px" }}
+      ></div>
     </div>
   );
 };
 
-export default SimulationViewer;
+export default SimulationViewer_copy;

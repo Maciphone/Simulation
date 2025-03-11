@@ -9,7 +9,7 @@ const simulationSlice = createSlice({
     name: "simulation",
     initialState,
     reducers: {
-        setSimulationId: (state, action) => {
+        setSimulationIdRedux: (state, action) => {
             state.simulationId = action.payload;
             localStorage.setItem("simulationId", action.payload);
         },
@@ -20,5 +20,5 @@ const simulationSlice = createSlice({
     },
 });
 
-export const { setSimulationId, clearSimulationId } = simulationSlice.actions;
+export const { setSimulationIdRedux, clearSimulationId } = simulationSlice.actions;
 export default simulationSlice.reducer;
