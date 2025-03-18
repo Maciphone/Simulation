@@ -10,6 +10,11 @@ public class DotStatistic : IGameStatistic
         Console.WriteLine(string.Join(", ", actualStand.Select(item => $"{item.Key}: {item.Value}")));
     }
 
+    public Dictionary<ItemType, int> SendStatistic(List<Item> items)
+    {
+        return  CountItemsByType(items);
+    }
+
     private Dictionary<ItemType, int> CountItemsByType(List<Item> items)
     {
         return items.GroupBy(item => item.Type).ToDictionary(g => g.Key,

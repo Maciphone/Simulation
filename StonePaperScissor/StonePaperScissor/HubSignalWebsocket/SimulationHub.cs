@@ -9,7 +9,9 @@ namespace StonePaperScissor.HubSignalWebsocket;
 public class SimulationHub :Hub
 {
     //szálbiztos dict. több szálon lehet hozzáférni
-    private static ConcurrentDictionary<string, string> gamemasterDictionary = new();
+    private static ConcurrentDictionary<string, SimulationData> gamemasterDictionary = new();
+    
+    
     //Symulation
     public async Task JoinSimulation(string simulationId)
     {
@@ -20,7 +22,14 @@ public class SimulationHub :Hub
     public async Task SendSimulationState(string simulationId, string items)
     {
         await Clients.Group(simulationId).SendAsync("ReceiveGameState", items);
+        
     }
+
+    public async Task SendStatistic(string simulationId, Dictionary<ItemType, int> statistic)
+    {
+        await Clients.Group(simulationId).SendAsync("ReceiveStatistic", statistic);
+    }
+    
     
     
     //Data flow on chat
@@ -38,29 +47,48 @@ public class SimulationHub :Hub
         return false;
 
     }
-    public async Task JoinGameMaster(string gameMasterId, string? simulationId)
+    public async Task JoinGameMaster(string gameMasterId, SimulationData? simulationData)
     {
-        if (simulationId != null)
+        if (simulationData != null)
         {
-            gamemasterDictionary[gameMasterId] = simulationId;
+            gamemasterDictionary[gameMasterId] = simulationData;
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, gameMasterId);
-        await Clients.Group(gameMasterId).SendAsync("ReceiveSimulationId", simulationId);
+        await Clients.Group(gameMasterId).SendAsync("ReceiveSimulationId", simulationData);
         
     }
     //csoport tagjainak üzenet küldése
     
     
+    
+    
     public async Task<string> GetSimulationIdForGameMaster(string gameMasterId)
     {
-        if (gamemasterDictionary.TryGetValue(gameMasterId, out var simulationId))
+        if (gamemasterDictionary.TryGetValue(gameMasterId, out var simulationData))
         {
-            return simulationId;
+            return simulationData.simulationId;
         }
         return null; 
     }
+    
+    public async Task JoinViewer(string gameMasterId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, gameMasterId);
+
+        if (gamemasterDictionary.TryGetValue(gameMasterId, out var simulationData))
+        {
+           
+            await Clients.Caller.SendAsync("ReceiveSimulationId", simulationData);
+        }
+        else
+        {
+           
+            await Clients.Caller.SendAsync("ReceiveSimulationIdError", "Nincs elérhető szimuláció.");
+        }
+    }
   
+    
     
     
     
@@ -68,7 +96,7 @@ public class SimulationHub :Hub
     public async Task LeaveGameMaster(string gameMasterId)
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameMasterId);
-        if(!gamemasterDictionary.TryRemove(gameMasterId, out string value))
+        if(!gamemasterDictionary.TryRemove(gameMasterId, out SimulationData value))
         {
             await Clients.Caller.SendAsync("Error", $"GameMaster {gameMasterId} nem lett törölve");
         }

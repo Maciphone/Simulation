@@ -43,4 +43,22 @@ public abstract class Item
     
 
     public abstract Item Move(int row, int column, List<Item> items);
+
+    protected bool Equals(Item other)
+    {
+        return Type == other.Type && Position.Equals(other.Position);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        return Equals((Item)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)Type, Position);
+    }
 }

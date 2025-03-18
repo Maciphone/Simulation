@@ -20,6 +20,8 @@ public class Simulator :ISimulator
     private bool Stopped;
     private int count;
     private string _simulationId;
+    private int _delay;
+    private List<Item> _deathItems;
     
     
 
@@ -32,7 +34,9 @@ public class Simulator :ISimulator
         _dotGameStatistic = dotGameStatistic;
         _hubContext = hubContext;
         _newItems = new List<Item>();
+        _deathItems = new List<Item>();
         Stopped = false;
+        _delay = 30;
     }
 
     public Simulator(IHubContext<SimulationHub> hubContext)
@@ -79,11 +83,12 @@ public class Simulator :ISimulator
         {
             if (item.Alive)
             {
-              
-              
+
+
                 var hitItem = item.Move(X, Y, _items);
-                if (hitItem != null){
-                  _newItems.Add(hitItem);
+                if (hitItem != null)
+                {
+                    _newItems.Add(hitItem);
                 }
                 // {
                 //     //_items.Remove(item);
@@ -91,14 +96,24 @@ public class Simulator :ISimulator
                 //    // TransformItem(hitItem);
                 //   //  ReactivateHitedItem(hitItem);
                 // }
-                
-            }
+
+            } 
+            else {
+                 _deathItems.Add(item); }
+             
         }
        
         TransformNewItems();
-   
-        _dotVisualiser.SimulationVisualisation(_items, X, Y);
+       // RemoveDeathItems();
+
+        //_dotVisualiser.SimulationVisualisation(_items, X, Y);
+
         //_dotGameStatistic.ShowStatistic(_items);
+    }
+
+    private void RemoveDeathItems()
+    {
+        _items.RemoveAll(item => _deathItems.Contains(item));
     }
 
     public void StartPlayOneGame()
@@ -107,6 +122,7 @@ public class Simulator :ISimulator
     }
     
     public async void PlayOneGame()
+    
     {
        
         while (!OnlyOneType() && !Stopped)
@@ -115,9 +131,14 @@ public class Simulator :ISimulator
             PlayOneRound();
             string gameState = SerializeGameState();
             await _hubContext.Clients.Group(_simulationId).SendAsync("ReceiveGameState", gameState);
-           Thread.Sleep(70);
+            var gameStatistic = _dotGameStatistic.SendStatistic(_items);
+            await _hubContext.Clients.Group(_simulationId).SendAsync("ReceiveStatistic", gameStatistic);
+           Thread.Sleep(_delay);
             Console.WriteLine(count);
+            
         }
+        var result = _items.Select(item => item.Type).ToList()[0];
+        
     }
 
     private string SerializeGameState()
@@ -132,6 +153,17 @@ public class Simulator :ISimulator
        
         // bool isSingleType = _items.Any() && _items.Select(item => item.Type).Distinct().Count() == 1;
         // return isSingleType;
+
+        if (_items.Select(item => item.Type).ToHashSet().Count == 2 )
+        {
+            _delay = 15;
+
+        }
+        if (_items.Select(item => item.Type).ToHashSet().Count == 1)
+        {
+            var result = _items.Select(item => item.Type).ToList()[0];
+            
+        }
         return _items.Select(item => item.Type).ToHashSet().Count == 1;
 
     }
@@ -141,6 +173,7 @@ public class Simulator :ISimulator
     {
         _newItems.ForEach(MakeOneTransform);
         _newItems.Clear();
+        
     }
 
     private void MakeOneTransform(Item hitedItem)
@@ -149,21 +182,24 @@ public class Simulator :ISimulator
         {
             case ItemType.Paper:
                _items.Add(new Scissor("S", hitedItem.Position));
-               _items.Remove(hitedItem);
+               //_items.Remove(hitedItem);
+               Console.WriteLine( _items.Remove(hitedItem));
                
                 // hitedItem.Sign = "S";
                 // hitedItem.Type = ItemType.Scissor;
             break;
             case ItemType.Scissor:
                _items.Add(new Stone("O", hitedItem.Position));
-               _items.Remove(hitedItem);
+               //_items.Remove(hitedItem);
+               Console.WriteLine( _items.Remove(hitedItem));
 
                 // hitedItem.Sign = "O";
                 // hitedItem.Type = ItemType.Stone;
                 break;
             case ItemType.Stone:
                 _items.Add(new Paper("P", hitedItem.Position));
-                _items.Remove(hitedItem);
+                //_items.Remove(hitedItem);
+                Console.WriteLine( _items.Remove(hitedItem));
 
                 // hitedItem.Sign = "P";
                 // hitedItem.Type = ItemType.Paper;
