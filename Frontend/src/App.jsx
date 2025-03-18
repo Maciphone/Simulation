@@ -5,21 +5,26 @@ import { Routes, Route } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import SimulationHandling from "./pages/SimulationHandling";
-import SimulationViewer_copy from "./pages/SimulationViewer_copy";
 import PixiTest from "./pages/pixiTest";
+import SimulationViewerMaster from "./pages/SimulationViewerMaster";
+import SimulationViewerSlave from "./pages/SimulationViewerSlave";
+import Main from "./pages/Index";
+import NavBar from "./components/NavBar";
 
 function App() {
   return (
     <Provider store={store}>
       <div>
+        <NavBar />
         <Routes>
-          <Route path="/" element={<SimulationViewer />} />
+          <Route path="/simulationView" element={<SimulationViewer />} />
           <Route path="/pixi" element={<PixiTest />} />
           <Route path="/simulation" element={<SimulationHandling />} />
-          <Route path="/initialize" element={<SimulationHandling />} />
+          <Route path="/" element={<Main />} />
+          <Route path="/slave" element={<SimulationViewerSlave />} />
           <Route
             path="/simulation/:simulationId"
-            element={<SimulationViewer_copy />}
+            element={<SimulationViewerMaster />}
           />
         </Routes>
       </div>

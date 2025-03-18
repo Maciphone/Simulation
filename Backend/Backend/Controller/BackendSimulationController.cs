@@ -88,5 +88,17 @@ public class BackendSimulationController : ControllerBase
         }
         return Ok();
     }
+    
+    [HttpPost("end")]
+        public async Task<IActionResult> EndSimulation([FromBody] SimulationIdRequest request)
+        {
+            var response = await _httpClient.PostAsJsonAsync($"{_simulationApiUrl}/end", request);
+            if (!response.IsSuccessStatusCode)
+            {
+                return StatusCode((int)response.StatusCode, await response.Content.ReadAsStringAsync());
+            }
+            return Ok();
+        }
+
 
 }

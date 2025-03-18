@@ -7,8 +7,9 @@ import { createSimulation, getToken } from "../sevices/apiService";
 import {
   roomExist,
   createSignalRConnection,
-  getSimulationId,
+  // getSimulationId,
   sendSimulationId,
+  getSimulationIdAsync,
 } from "../sevices/hubService";
 import * as signalR from "@microsoft/signalr";
 
@@ -31,9 +32,12 @@ export default function SimulationHandling() {
 
   useEffect(() => {
     getToken();
+  }, []);
+
+  useEffect(() => {
     const newConnection = createSignalRConnection();
     setConnection(newConnection);
-  }, [token]);
+  }, []);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -47,7 +51,9 @@ export default function SimulationHandling() {
   };
 
   const goToSimulation = () => {
-    navigate(`/simulation/${simulationId}`);
+    navigate(
+      `/simulation/${simulationId}?gameMasterId=${gameMasterId}&rows=${rows}&columns=${columns}`
+    );
   };
 
   const handleSubmit = async (event) => {
@@ -75,8 +81,10 @@ export default function SimulationHandling() {
         let exist = await roomExist(connection, gameMasterId);
         if (!exist) {
           console.log("Nincs ilyen szoba!");
-          await sendSimulationId(connection, gameMasterId, simulationId);
-          var properId = await getSimulationId(connection, gameMasterId);
+          const initialData = { rows, columns, simulationId };
+          console.log("initialData", initialData);
+          await sendSimulationId(connection, gameMasterId, initialData);
+          var properId = await getSimulationIdAsync(connection, gameMasterId);
           console.log("properId", properId);
         } else {
           console.log("Van ilyen szoba!");

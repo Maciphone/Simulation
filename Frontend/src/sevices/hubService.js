@@ -1,19 +1,23 @@
 
 import * as signalR from "@microsoft/signalr";
 
+let connection = null;
+
 //  SignalR kapcsolat létrehozása
 const createSignalRConnection = () => {
-    const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/simulationHub", { withCredentials: true })
-        .withAutomaticReconnect()
-        .configureLogging(signalR.LogLevel.Information)
-        .build();
+    if (!connection) {
+        connection = new signalR.HubConnectionBuilder()
+            .withUrl("/simulationHub", { withCredentials: true })
+            .withAutomaticReconnect()
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
 
-    connection
-        .start()
-        .then(() => console.log("🔗 SignalR kapcsolat létrejött!"))
-        .catch((err) => console.error("Hiba a SignalR kapcsolatnál:", err));
+        connection
+            .start()
+            .then(() => console.log("🔗 SignalR kapcsolat létrejött!"))
+            .catch((err) => console.error("Hiba a SignalR kapcsolatnál:", err));
 
+    }
     return connection;
 };
 
@@ -35,7 +39,7 @@ const roomExist = (connection, gameMasterId) => {
 }
 
 // 🎮 GameMaster szoba csatlakozás
-const sendSimulationId = async (connection, gameMasterId, simulationId) => {
+const sendSimulationId = async (connection, gameMasterId, initialData) => {
 
     if (!connection || !gameMasterId) {
         console.log("Nincs kapcsolat vagy nincs GameMaster ID!");
@@ -44,9 +48,20 @@ const sendSimulationId = async (connection, gameMasterId, simulationId) => {
 
     try {
         connection
-            .invoke("JoinGameMaster", gameMasterId, simulationId)
+            .invoke("JoinGameMaster", gameMasterId, initialData)
             .then(() => console.log(` Csatlakoztál a ${gameMasterId} csoporthoz.`))
             .catch((err) => console.error("Hiba a csatlakozás során: ", err));
+
+        connection.on("ReceiveSimulationId", (state) => {
+            const stringData = JSON.stringify(state, null, 2);
+            const parsedData = JSON.parse(stringData);
+            console.log("🎲 SzimulációDataPARES:", parsedData);
+
+            console.log(`🎲 Szimuláció ID: ${state.simulationId}`);
+            // console.log(`🎲 SzimulációData: ${JSON.parse(state)}`);
+            console.log("🎲 SzimulációData:", JSON.stringify(state, null, 2));
+        }
+        );
 
     } catch (err) {
         console.error("❌ Hiba a csatlakozás során:", err);
@@ -55,28 +70,20 @@ const sendSimulationId = async (connection, gameMasterId, simulationId) => {
 }
 
 
-const getSimulationId = async (connection, gameMasterId) => {
+
+const getSimulationIdAsync = async (connection, gameMasterId) => {
     if (!connection || !gameMasterId) {
         console.error("❌ Nincs kapcsolat vagy GameMaster ID!");
         return null;
     }
-    return new Promise((resolve, reject) => {
-        try {
-            connection.invoke("JoinGameMaster", gameMasterId, null)
-                .then(() => console.log(`✅ Csatlakoztál a ${gameMasterId} csoporthoz.`));
-
-            connection.on("ReceiveSimulationId", (state) => {
-                console.log(` Szimuláció ID megkapva: ${state}`);
-                resolve(state); // Most várjuk meg, és visszaadjuk
-            });
-
-        } catch (err) {
-            console.error(" Hiba a szimuláció ID lekérésekor:", err);
-            reject(err);
-        }
-    });
+    try {
+        var simulationId = connection.invoke("GetSimulationIdForGameMaster", gameMasterId)
+        return simulationId
+    } catch (error) {
+        console.error("Hiba a szimuláció ID lekérésekor:", error);
+        return null;
+    }
 }
-
 // try {
 //     connection.invoke("JoinGameMaster", gameMasterId, null)
 //         .then(() => console.log(`Csatlakoztál a ${gameMasterId} csoporthoz.`))
@@ -107,4 +114,27 @@ const leaveGameMaster = async (connection, gameMasterId) => {
 }
 
 
-export { createSignalRConnection, roomExist, getSimulationId, sendSimulationId, leaveGameMaster };
+export { createSignalRConnection, roomExist, sendSimulationId, getSimulationIdAsync, leaveGameMaster };
+
+
+// const getSimulationId = async (connection, gameMasterId) => {
+//     if (!connection || !gameMasterId) {
+//         console.error("❌ Nincs kapcsolat vagy GameMaster ID!");
+//         return null;
+//     }
+//     return new Promise((resolve, reject) => {
+//         try {
+//             connection.invoke("JoinGameMaster", gameMasterId, null)
+//                 .then(() => console.log(`✅ Csatlakoztál a ${gameMasterId} csoporthoz.`));
+
+//             connection.on("ReceiveSimulationId", (state) => {
+//                 console.log(` Szimuláció ID megkapva: ${state}`);
+//                 resolve(state); // Most várjuk meg, és visszaadjuk
+//             });
+
+//         } catch (err) {
+//             console.error(" Hiba a szimuláció ID lekérésekor:", err);
+//             reject(err);
+//         }
+//     });
+// }
