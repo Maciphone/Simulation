@@ -129,16 +129,22 @@ public class Simulator :ISimulator
         {
             count++;
             PlayOneRound();
+            //send item list
             string gameState = SerializeGameState();
             await _hubContext.Clients.Group(_simulationId).SendAsync("ReceiveGameState", gameState);
+            //send statistic
             var gameStatistic = _dotGameStatistic.SendStatistic(_items);
             await _hubContext.Clients.Group(_simulationId).SendAsync("ReceiveStatistic", gameStatistic);
-           Thread.Sleep(_delay);
+           
+            Thread.Sleep(_delay);
+            
             Console.WriteLine(count);
             
         }
+        //send winner
         var result = _items.Select(item => item.Type).ToList()[0];
-        
+        await _hubContext.Clients.Group(_simulationId).SendAsync("ReceiveWinner", result);
+
     }
 
     private string SerializeGameState()

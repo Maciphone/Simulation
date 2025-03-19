@@ -1,5 +1,6 @@
 const createSimulation = async (initialData) => {
   try {
+    console.log("CREATE SIMULATION");
     const response = await fetch("/api/BackendSimulation/initialize", {
       method: "POST",
       headers: {

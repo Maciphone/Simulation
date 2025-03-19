@@ -68,7 +68,35 @@ const sendSimulationId = async (connection, gameMasterId, initialData) => {
 
     }
 }
+// const sendSimulationId = async (connection, gameMasterId, initialData) => {
+//     if (!connection || !gameMasterId) {
+//         console.log("❌ Nincs kapcsolat vagy nincs GameMaster ID!");
+//         return;
+//     }
 
+//     try {
+//         1️⃣ Először feliratkozunk az eseményre
+//         connection.off("ReceiveSimulationId"); // Leiratkozás az esetleges régi figyelőkről
+//         connection.on("ReceiveSimulationId", (state) => {
+//             try {
+//                 console.log("📩 Kapott Simulation ID állapot:", state);
+//                 const parsedData = JSON.parse(JSON.stringify(state));
+//                 console.log("🎲 SzimulációData PARES:", parsedData);
+//                 console.log("🎲 Szimuláció ID:", parsedData.simulationId);
+//             } catch (error) {
+//                 console.error("❌ JSON parse hiba a Simulation ID fogadásakor:", error);
+//             }
+//         });
+
+//         2️⃣ Most küldjük el az adatokat
+//         console.log("📡 Simulation ID küldése...");
+//         await connection.invoke("JoinGameMaster", gameMasterId, initialData);
+//         console.log(`✅ Sikeresen csatlakoztál a ${gameMasterId} csoporthoz!`);
+
+//     } catch (err) {
+//         console.error("❌ Hiba a Simulation ID küldése során:", err);
+//     }
+// };
 
 
 const getSimulationIdAsync = async (connection, gameMasterId) => {

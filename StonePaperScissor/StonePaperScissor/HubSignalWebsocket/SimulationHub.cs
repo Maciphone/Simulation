@@ -12,13 +12,17 @@ public class SimulationHub :Hub
     private static ConcurrentDictionary<string, SimulationData> gamemasterDictionary = new();
     
     
-    //Symulation
+    //SIMULATION
+    
+    //create hub with simualationId
     public async Task JoinSimulation(string simulationId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, simulationId);
         await Clients.Caller.SendAsync("JoinedSimulation", simulationId);
+        
     }
 
+    //
     public async Task SendSimulationState(string simulationId, string items)
     {
         await Clients.Group(simulationId).SendAsync("ReceiveGameState", items);
@@ -30,6 +34,15 @@ public class SimulationHub :Hub
         await Clients.Group(simulationId).SendAsync("ReceiveStatistic", statistic);
     }
     
+    public async Task SendFinish(string simulationId, bool trucy)
+    {
+        await Clients.Group(simulationId).SendAsync("ReceiveFinished", true);
+    }
+    
+    public async Task SendWinner(string simulationId, ItemType item)
+    {
+        await Clients.Group(simulationId).SendAsync("ReceiveWinner", item);
+    }
     
     
     //Data flow on chat
@@ -53,8 +66,10 @@ public class SimulationHub :Hub
         {
             gamemasterDictionary[gameMasterId] = simulationData;
         }
+        Console.WriteLine(simulationData);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, gameMasterId);
+        //row, column, simualtion id 
         await Clients.Group(gameMasterId).SendAsync("ReceiveSimulationId", simulationData);
         
     }

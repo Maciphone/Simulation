@@ -4,9 +4,18 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import * as PIXI from "pixi.js";
 import { Application, Graphics } from "pixi.js";
 import { use } from "react";
-
+import { useDispatch } from "react-redux";
+import { setSimulationIdRedux } from "../redux/simulationSlice";
+import { createSimulation } from "../sevices/apiService";
+import {
+  roomExist,
+  createSignalRConnection,
+  // getSimulationId,
+  sendSimulationId,
+  getSimulationIdAsync,
+} from "../sevices/hubService";
 const SimulationViewerMaster = () => {
-  const { simulationId } = useParams();
+  //const { simulationId } = useParams();
   //query paraméterek lekérése
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -17,6 +26,7 @@ const SimulationViewerMaster = () => {
   const [simulationData, setSimulationData] = useState(null);
   const [statistic, setStatistic] = useState(null);
   const [sum, setSum] = useState(0);
+  const [winner, setWinner] = useState(null);
 
   const [connection, setConnection] = useState(null);
   const pixiContainerRef = useRef(null);
@@ -24,6 +34,9 @@ const SimulationViewerMaster = () => {
   const pixiFlag = useRef(false);
 
   const navigate = useNavigate();
+
+  const dispatch = useDispatch();
+  const [simulationId, setSimulationId] = useState("");
 
   useEffect(() => {
     const getToken = async () => {
@@ -94,6 +107,44 @@ const SimulationViewerMaster = () => {
     };
     startConnection();
   }, []);
+
+  //new game setup
+  const handleNewGame = async (event) => {
+    if (!connection) return;
+
+    event.preventDefault();
+    console.log("submit pushed");
+    console.log("simulationData", simulationData);
+    const itemCount = simulationData.itemCount;
+    console.log("itemCount", itemCount);
+    const initialData = { rows, columns, itemCount };
+    console.log("initialData", initialData);
+
+    try {
+      const simulationId = await createSimulation(initialData);
+      console.log(simulationId); //pipa
+      if (simulationId) {
+        dispatch(setSimulationIdRedux(simulationId));
+        //const newInitialData = { rows, columns, itemCount, simulationId };
+        const newInitialData = {
+          rows: Number(rows), // Számként küldjük
+          columns: Number(columns),
+          itemCount: Number(itemCount),
+          simulationId: simulationId,
+        };
+        console.log("newInitialData", newInitialData);
+        console.log("gameMasterId", gameMasterId);
+        await sendSimulationId(connection, gameMasterId, newInitialData);
+        //setSimulationId(simulationId);
+        joinSimulation();
+        fetchStartSimulation();
+      } else {
+        throw new Error("No simulationId");
+      }
+    } catch (error) {
+      console.error("Error: no initialisation", error);
+    }
+  };
 
   const fetchStartSimulation = async () => {
     try {
@@ -176,6 +227,7 @@ const SimulationViewerMaster = () => {
     }
   };
 
+  //lehív: row, column, simulationId
   useEffect(() => {
     if (!connection) return;
     const getData = async () => {
@@ -188,17 +240,19 @@ const SimulationViewerMaster = () => {
         connection.on("ReceiveSimulationId", (state) => {
           const stringData = JSON.stringify(state, null, 2);
           const parsedData = JSON.parse(stringData);
-          console.log("simulationDate", parsedData);
+          console.log("SIMULATIONDATA", parsedData);
           setSimulationData(parsedData); // Beállítjuk az állapotot
+          setSimulationId(parsedData.simulationId); // Beállítjuk a szimuláció ID-t
         });
       } catch (err) {
         console.error("Hiba a csatlakozás során: ", err);
       }
     };
     getData();
-  }, [connection, gameMasterId]);
+  }, [connection, gameMasterId, simulationId]);
 
   const joinSimulation = () => {
+    console.log("joinSimulation");
     if (connection && simulationId) {
       connection
         .invoke("JoinSimulation", simulationId)
@@ -218,13 +272,23 @@ const SimulationViewerMaster = () => {
         //const statistic = JSON.parse(state);
         const parsedStatistic = JSON.parse(JSON.stringify(state));
         setStatistic(parsedStatistic);
-        //  console.log("📊 Statisztika:", parsedStatistic);
-        // console.log(state);
+      });
+      connection.on("ReceiveWinner", (state) => {
+        const parsedWinner = JSON.parse(JSON.stringify(state));
+        setWinner(parsedWinner);
+        console.log("🏆 Winner:", parsedWinner);
       });
     } else {
-      console.error("A kapcsolat még nincs készen!");
+      console.error("Nincs kapcsolat vagy nincs szimuláció ID!");
     }
   };
+
+  useEffect(() => {
+    if (winner) {
+      alert(`Winner: ${winner}`);
+      setWinner(null);
+    }
+  }, [winner]);
 
   useEffect(() => {
     if (statistic) {
@@ -285,6 +349,11 @@ const SimulationViewerMaster = () => {
       <div>
         <button onClick={end} style={{ padding: "5px 10px" }}>
           End
+        </button>
+      </div>
+      <div>
+        <button onClick={handleNewGame} style={{ padding: "5px 10px" }}>
+          NewGame
         </button>
       </div>
       {statistic && (

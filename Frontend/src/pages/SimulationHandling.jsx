@@ -81,6 +81,26 @@ export default function SimulationHandling() {
         let exist = await roomExist(connection, gameMasterId);
         if (!exist) {
           console.log("Nincs ilyen szoba!");
+          const initialData = { rows, columns, simulationId, itemCount };
+          console.log("initialData", initialData);
+          await sendSimulationId(connection, gameMasterId, initialData);
+          var properId = await getSimulationIdAsync(connection, gameMasterId);
+          console.log("properId", properId);
+        } else {
+          console.log("Van ilyen szoba!");
+        }
+      } catch (error) {
+        console.error("Hiba a csatlakozás során:", error);
+      }
+    }
+  };
+
+  const createHubPassSimulationIdNewRound = async () => {
+    if (connection && gameMasterId && simulationId) {
+      try {
+        let exist = await roomExist(connection, gameMasterId);
+        if (exist) {
+          console.log("Nincs ilyen szoba!");
           const initialData = { rows, columns, simulationId };
           console.log("initialData", initialData);
           await sendSimulationId(connection, gameMasterId, initialData);
