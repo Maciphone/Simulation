@@ -1,7 +1,7 @@
 import "tailwindcss";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setSimulationIdRedux } from "../redux/simulationSlice";
 import { createSimulation, getToken } from "../sevices/apiService";
 import {
