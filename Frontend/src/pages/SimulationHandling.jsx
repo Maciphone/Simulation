@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  setGameMasterId,
   setSimulationIdRedux,
   setSimulationParams,
 } from "../redux/simulationSlice";
@@ -14,16 +15,28 @@ import {
   getSimulationIdAsync,
 } from "../sevices/hubService";
 import * as signalR from "@microsoft/signalr";
+import {
+  selectColumns,
+  selectGameMasterId,
+  selectItemCount,
+  selectRows,
+} from "../sevices/simulationSelectros";
 
 export default function SimulationHandling() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   //initialise
-  const [rows, setRows] = useState(0);
-  const [columns, setColumns] = useState(0);
-  const [itemCount, setItemCount] = useState(0);
+  // const [rows, setRows] = useState(0);
+  // const [columns, setColumns] = useState(0);
+  // const [itemCount, setItemCount] = useState(0);
+
+  const rows = useSelector(selectRows);
+  const columns = useSelector(selectColumns);
+  const itemCount = useSelector(selectItemCount);
+  const gameMasterId = useSelector(selectGameMasterId);
+
   const [connection, setConnection] = useState(null);
-  const [gameMasterId, setGameMasterId] = useState("");
+  // const [gameMasterId, setGameMasterId] = useState("");
   const [canSet, setCanSet] = useState(true);
   const [messages, setMessages] = useState([]);
 
@@ -45,11 +58,11 @@ export default function SimulationHandling() {
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     if (name === "rows") {
-      setRows(Number(value));
+      dispatch(setSimulationParams({ rows: Number(value) }));
     } else if (name === "columns") {
-      setColumns(Number(value));
+      dispatch(setSimulationParams({ columns: Number(value) }));
     } else if (name === "itemCount") {
-      setItemCount(Number(value));
+      dispatch(setSimulationParams({ itemCount: Number(value) }));
     }
   };
 
@@ -98,26 +111,6 @@ export default function SimulationHandling() {
     }
   };
 
-  const createHubPassSimulationIdNewRound = async () => {
-    if (connection && gameMasterId && simulationId) {
-      try {
-        let exist = await roomExist(connection, gameMasterId);
-        if (exist) {
-          console.log("Nincs ilyen szoba!");
-          const initialData = { rows, columns, simulationId };
-          console.log("initialData", initialData);
-          await sendSimulationId(connection, gameMasterId, initialData);
-          var properId = await getSimulationIdAsync(connection, gameMasterId);
-          console.log("properId", properId);
-        } else {
-          console.log("Van ilyen szoba!");
-        }
-      } catch (error) {
-        console.error("Hiba a csatlakozás során:", error);
-      }
-    }
-  };
-
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Simulation Handling</h1>
@@ -128,7 +121,7 @@ export default function SimulationHandling() {
             <input
               type="number"
               name="rows"
-              value={rows}
+              value={rows ?? 0}
               onChange={handleInputChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -140,7 +133,7 @@ export default function SimulationHandling() {
             <input
               type="number"
               name="columns"
-              value={columns}
+              value={columns ?? 0}
               onChange={handleInputChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -152,7 +145,7 @@ export default function SimulationHandling() {
             <input
               type="number"
               name="itemCount"
-              value={itemCount}
+              value={itemCount ?? 0}
               onChange={handleInputChange}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -171,7 +164,7 @@ export default function SimulationHandling() {
             type="text"
             placeholder="Add meg a GameMasterID-t (hubname)"
             value={gameMasterId}
-            onChange={(e) => setGameMasterId(e.target.value)}
+            onChange={(e) => dispatch(setGameMasterId(e.target.value))}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
           <button

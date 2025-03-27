@@ -25,11 +25,19 @@ const simulationSlice = createSlice({
             state.gameMasterId = action.payload;
         },
         setSimulationParams: (state, action) => {
-            state.rows = action.payload.rows;
-            state.columns = action.payload.columns;
-            state.itemCount = action.payload.itemCount;
-            state.simulationId = action.payload.simulationId;
+            const { rows, columns, itemCount, simulationId } = action.payload;
+
+            if (rows !== undefined) state.rows = rows;
+            if (columns !== undefined) state.columns = columns;
+            if (itemCount !== undefined) state.itemCount = itemCount;
+            if (simulationId !== undefined) state.simulationId = simulationId;
         },
+        // setSimulationParams: (state, action) => {
+        //     state.rows = action.payload.rows;
+        //     state.columns = action.payload.columns;
+        //     state.itemCount = action.payload.itemCount;
+        //     state.simulationId = action.payload.simulationId;
+        // },
         setIsRunning: (state, action) => {
             state.isRunning = action.payload;
         },
