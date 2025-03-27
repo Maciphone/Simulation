@@ -4,17 +4,35 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import * as PIXI from "pixi.js";
 import { Application, Graphics } from "pixi.js";
 import { use } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { selectGameMasterId } from "../sevices/simulationSelectros";
+import {
+  setGameMasterId,
+  setSimulationIdRedux,
+  setSimulationParams,
+} from "../redux/simulationSlice";
 
 const SimulationViewerSlave = () => {
-  const [simulationId, setSimulationId] = useState("");
-  //query paraméterek lekérése
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const [gameMasterId, setGameMasterId] = useState("");
-  const rows = searchParams.get("rows");
-  const columns = searchParams.get("columns");
+  const dispatch = useDispatch();
 
-  const [simulationData, setSimulationData] = useState(null);
+  //query paraméterek lekérése
+  //const location = useLocation();
+  //const searchParams = new URLSearchParams(location.search);
+  //const [gameMasterId, setGameMasterId] = useState("");
+
+  const {
+    simulationId,
+    gameMasterId,
+    rows,
+    columns,
+    itemCount,
+    isRunning,
+    isPaused,
+    statistics,
+    winner,
+  } = useSelector((state) => state.simulation);
+
+  //const [simulationData, setSimulationData] = useState(null);
 
   const [connection, setConnection] = useState(null);
   const pixiContainerRef = useRef(null);
@@ -46,25 +64,27 @@ const SimulationViewerSlave = () => {
 
   useEffect(() => {
     async function init() {
-      if (!simulationData) {
+      if (!rows || !columns) {
         return;
       }
 
-      console.log("simulationData", simulationData);
       if (pixiFlag.current) return; // otherwise react appends it twice, in strict mode
       pixiFlag.current = true;
       const app = new Application();
       pixiAppRef.current = app;
-      const rows = parseInt(simulationData.rows) * 10;
-      const columns = parseInt(simulationData.columns) * 10;
-      console.log("rows", rows);
-      console.log("columns", columns);
-      await app.init({ background: "#AA0000", width: columns, height: rows });
+      const rowsPixi = parseInt(rows) * 10;
+      const columnsPixi = parseInt(columns) * 10;
+
+      await app.init({
+        background: "#AA0000",
+        width: columnsPixi,
+        height: rowsPixi,
+      });
       pixiContainerRef.current.appendChild(app.canvas);
     }
     init();
     //<button onClick={getData}>getData</button>;
-  }, [simulationData]);
+  }, [columns, rows]);
 
   useEffect(() => {
     const startConnection = async () => {
@@ -106,8 +126,8 @@ const SimulationViewerSlave = () => {
           const stringData = JSON.stringify(state, null, 2);
           const parsedData = JSON.parse(stringData);
           console.log("simulationDate", parsedData);
-          setSimulationData(parsedData);
-          setSimulationId(parsedData.simulationId);
+          dispatch(setSimulationParams(parsedData));
+          dispatch(setSimulationIdRedux(parsedData.simulationId));
         });
       } catch (err) {
         console.error("Hiba a csatlakozás során: ", err);
@@ -117,7 +137,9 @@ const SimulationViewerSlave = () => {
   };
 
   const joinSimulation = () => {
-    if (connection && simulationId) {
+    console.log("Joining simulation...", simulationId);
+    if (connection) {
+      console.log("Joining simulation...");
       connection
         .invoke("JoinSimulation", simulationId)
         .then(() => console.log(`Csatlakoztál a ${simulationId} csoporthoz.`))
@@ -164,7 +186,7 @@ const SimulationViewerSlave = () => {
 
   const handleInputChange = (event) => {
     const result = event.target.value;
-    setGameMasterId(result);
+    dispatch(setGameMasterId(result));
     console.log(result);
   };
 
