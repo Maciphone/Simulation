@@ -19,13 +19,14 @@ const SimulationViewerMaster = () => {
   //query paraméterek lekérése
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  //const gameMasterId = searchParams.get("gameMasterId");
-  //const rows = searchParams.get("rows");
-  //const columns = searchParams.get("columns");
+  const gameMasterId = searchParams.get("gameMasterId");
+  const rows = searchParams.get("rows");
+  const columns = searchParams.get("columns");
 
   const [simulationData, setSimulationData] = useState(null);
   const [statistic, setStatistic] = useState(null);
-  const [sum, setSum] = useState(0);
+  const [connection, setConnection] = useState(null);
+
   const [winner, setWinner] = useState(null);
 
   //const [connection, setConnection] = useState(null);
@@ -37,11 +38,6 @@ const SimulationViewerMaster = () => {
 
   const dispatch = useDispatch();
   const [simulationId, setSimulationId] = useState("");
-
-  //redux reducer
-  const { simulationId, gameMasterId, connection } = useSelector(
-    (state) => state.simulation
-  );
 
   useEffect(() => {
     const getToken = async () => {
@@ -274,14 +270,12 @@ const SimulationViewerMaster = () => {
         // console.log("Új játékállapot érkezett:", gameState);
       });
       connection.on("ReceiveStatistic", (state) => {
-        //const statistic = JSON.parse(state);
-        const parsedStatistic = JSON.parse(JSON.stringify(state));
-        setStatistic(parsedStatistic);
+        setStatistic(state);
       });
       connection.on("ReceiveWinner", (state) => {
-        const parsedWinner = JSON.parse(JSON.stringify(state));
-        setWinner(parsedWinner);
-        console.log("🏆 Winner:", parsedWinner);
+     
+        setWinner(state);
+        console.log("🏆 Winner:", state);
       });
     } else {
       console.error("Nincs kapcsolat vagy nincs szimuláció ID!");
@@ -294,13 +288,6 @@ const SimulationViewerMaster = () => {
       setWinner(null);
     }
   }, [winner]);
-
-  useEffect(() => {
-    if (statistic) {
-      const result = statistic.Stone + statistic.Scissor + statistic.Paper;
-      setSum(result);
-    }
-  }, [statistic]);
 
   const updatePixiScene = (gameState) => {
     const pixiGraphics = new Graphics();
@@ -324,7 +311,10 @@ const SimulationViewerMaster = () => {
   };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+    <div
+      className="bg-blue-500 p-4"
+      style={{ fontFamily: "Arial, sans-serif" }}
+    >
       <h1>Simulation Viewer</h1>
       <div>
         <button onClick={joinSimulation} style={{ padding: "5px 10px" }}>

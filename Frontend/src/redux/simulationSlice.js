@@ -7,11 +7,11 @@ const initialState = {
     rows: 0,
     columns: 0,
     itemCount: 0,
-    connection: null,
-    isRunning: false,  // Szimuláció fut-e
-    isPaused: false,   // Szimuláció szüneteltetve van-e
-    statistics: {},    // Játék statisztikák
-    winner: null,      // Nyertes neve
+    isRunning: false,
+    isPaused: false,
+    statistics: {},
+    winner: null,
+    userName: null
 };
 
 const simulationSlice = createSlice({
@@ -28,9 +28,7 @@ const simulationSlice = createSlice({
             state.rows = action.payload.rows;
             state.columns = action.payload.columns;
             state.itemCount = action.payload.itemCount;
-        },
-        setConnection: (state, action) => {
-            state.connection = action.payload;
+            state.simulationId = action.payload.simulationId;
         },
         setIsRunning: (state, action) => {
             state.isRunning = action.payload;
@@ -44,12 +42,18 @@ const simulationSlice = createSlice({
         setWinner: (state, action) => {
             state.winner = action.payload;
         },
+        setUserNameRedux: (state, action) => {
+            state.userName = action.payload;
+        },
+        removeUserName: (state) => {
+            state.userName = null;
+        }
     },
 });
 
 export const {
-    setSimulationIdRedux, setGameMasterId, setSimulationParams, setConnection,
-    setIsRunning, setIsPaused, setStatistics, setWinner
+    setSimulationIdRedux, setGameMasterId, setSimulationParams,
+    setIsRunning, setIsPaused, setStatistics, setWinner, setUserNameRedux, removeUserName
 } = simulationSlice.actions;
 
 export default simulationSlice.reducer;

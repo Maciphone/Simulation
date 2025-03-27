@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import * as signalR from "@microsoft/signalr";
 import SimulationAnimation from "./SimulationAnimation";
 import { useParams } from "react-router-dom";
+import { use } from "react";
 
 const SimulationViewer = () => {
   //const [simulationId, setSimulationId] = useState("waiting for id");
@@ -10,30 +11,32 @@ const SimulationViewer = () => {
   const [connection, setConnection] = useState(null);
   const [connect, setConect] = useState(false);
   const [token, setToken] = useState("");
+  const userNameLogedIn = useSelector((state) => state.simulation.userName);
 
   useEffect(() => {
     const getToken = async () => {
-      try {
-        const response = await fetch("/api/auth/guest", {
-          // Ha proxy van beállítva, elég csak "/api"
-          method: "POST",
-          // headers: {
-          //   "Content-Type": "application/json",
-          // },
-          credentials: "include",
-        });
+      if (!userNameLogedIn) {
+        try {
+          const response = await fetch("/api/auth/guest", {
+            // Ha proxy van beállítva, elég csak "/api"
+            method: "POST",
+            // headers: {
+            //   "Content-Type": "application/json",
+            // },
+            credentials: "include",
+          });
 
-        if (!response.ok) {
-          throw new Error(`Hiba: ${response.status}`);
+          if (!response.ok) {
+            throw new Error(`Hiba: ${response.status}`);
+          }
+          console.log("Vendég token sikeresen lekérve! cookieba mentve");
+        } catch (error) {
+          console.error("Token lekérés sikertelen:", error);
         }
-        console.log("Vendég token sikeresen lekérve! cookieba mentve");
-      } catch (error) {
-        console.error("Token lekérés sikertelen:", error);
       }
     };
-
     getToken();
-  }, []);
+  }, [userNameLogedIn]);
 
   useEffect(() => {
     const startConnection = () => {

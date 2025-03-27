@@ -8,6 +8,10 @@ export default function Main() {
     console.log("login");
     navigate("/login");
   };
+
+  const goRegister = () => {
+    navigate("/register");
+  };
   return (
     <div>
       <p>Main</p>
@@ -17,6 +21,10 @@ export default function Main() {
       <div>
         wanna login?
         <div onClick={goLogin}>oh yes</div>
+      </div>
+      <div>
+        wanna register?
+        <div onClick={goRegister}>oh yes</div>
       </div>
     </div>
   );

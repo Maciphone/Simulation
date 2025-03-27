@@ -10,6 +10,9 @@ import SimulationViewerMaster from "./pages/SimulationViewerMaster";
 import SimulationViewerSlave from "./pages/SimulationViewerSlave";
 import Main from "./pages/Index";
 import NavBar from "./components/NavBar";
+import SimulationViewerMasterRedux from "./pages/SimulationViewerMasterRedux";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function App() {
   return (
@@ -26,6 +29,8 @@ function App() {
             path="/simulation/:simulationId"
             element={<SimulationViewerMaster />}
           />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </Provider>

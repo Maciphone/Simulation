@@ -1,8 +1,10 @@
-import "tailwindcss";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setSimulationIdRedux } from "../redux/simulationSlice";
+import {
+  setSimulationIdRedux,
+  setSimulationParams,
+} from "../redux/simulationSlice";
 import { createSimulation, getToken } from "../sevices/apiService";
 import {
   roomExist,
@@ -27,12 +29,13 @@ export default function SimulationHandling() {
 
   //get simulationId
   const [simulationId, setSimulationId] = useState("waiting for id");
-
-  const [token, setToken] = useState("");
+  const userNameLogedIn = useSelector((state) => state.simulation.userName);
 
   useEffect(() => {
-    getToken();
-  }, []);
+    if (!userNameLogedIn) {
+      getToken();
+    }
+  }, [userNameLogedIn]);
 
   useEffect(() => {
     const newConnection = createSignalRConnection();
@@ -82,7 +85,7 @@ export default function SimulationHandling() {
         if (!exist) {
           console.log("Nincs ilyen szoba!");
           const initialData = { rows, columns, simulationId, itemCount };
-          console.log("initialData", initialData);
+          dispatch(setSimulationParams(initialData));
           await sendSimulationId(connection, gameMasterId, initialData);
           var properId = await getSimulationIdAsync(connection, gameMasterId);
           console.log("properId", properId);

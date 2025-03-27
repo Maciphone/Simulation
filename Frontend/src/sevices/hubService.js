@@ -54,8 +54,8 @@ const sendSimulationId = async (connection, gameMasterId, initialData) => {
 
         connection.on("ReceiveSimulationId", (state) => {
             const stringData = JSON.stringify(state, null, 2);
-            const parsedData = JSON.parse(stringData);
-            console.log("🎲 SzimulációDataPARES:", parsedData);
+            //   const parsedData = JSON.parse(stringData);
+            //  console.log("🎲 SzimulációDataPARES:", parsedData);
 
             console.log(`🎲 Szimuláció ID: ${state.simulationId}`);
             // console.log(`🎲 SzimulációData: ${JSON.parse(state)}`);
