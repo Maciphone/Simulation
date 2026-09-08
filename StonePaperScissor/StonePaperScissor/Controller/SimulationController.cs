@@ -66,7 +66,13 @@ public class SimulationController : ControllerBase
         _simulatorService.ResumeSimulation( simulationIdRequest.SimulationId);
         return Ok();
     }
-    
+
+    [HttpPost("end")]
+    public IActionResult EndGame([FromBody] SimulationIdRequest simulationIdRequest)
+    {
+        _simulatorService.EndSimulation(simulationIdRequest.SimulationId);
+        return Ok();
+    }
 
 }
     

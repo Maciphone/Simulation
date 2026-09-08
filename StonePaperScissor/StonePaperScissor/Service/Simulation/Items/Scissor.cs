@@ -17,7 +17,7 @@ public class Scissor : Item
         {
             List<Field> optionalFields = Util.Util.FieldsAround(Position, row,column,items);
             var hittableFields = optionalFields
-                .FindAll(f => f.Item is { Type: ItemType.Paper });
+                .FindAll(f => f.Item is { Type: ItemType.Paper, Alive: true });
             if (hittableFields.Count == 0)
             {
                 Field randomField = Util.Util.GetRandomField(optionalFields);

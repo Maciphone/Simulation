@@ -17,7 +17,8 @@ public class Paper : Item
         {
             List<Field> optionalFields = Util.Util.FieldsAround(Position, row,column,items);
             var hittableFields = optionalFields
-                .FindAll(f => f.Item is { Type: ItemType.Stone });
+                .FindAll(f => f.Item is { Type: ItemType.Stone, Alive: true });
+            
             if (hittableFields.Count == 0)
             {
                 Field randomField = Util.Util.GetRandomField(optionalFields);

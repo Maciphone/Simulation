@@ -38,7 +38,8 @@ public class AuthController :ControllerBase
 
         if (!result.Succeeded)
         {
-            return BadRequest(result.Errors);
+            var errors = result.Errors.Select(e => e.Description);
+            return BadRequest(new {errors});
         }
         var userData = new UserData
         {
@@ -79,6 +80,22 @@ public class AuthController :ControllerBase
         return Ok(new {message = "access guaranted" });
       
     }
+    
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Append("access_token", "", new CookieOptions
+        {
+            Expires = DateTime.UtcNow.AddDays(-1),
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            
+        });
+
+        return Ok(new { message = "Logged out successfully." });
+    }
+
     
     private string GenerateJwtToken(ApplicationUser user)
     {

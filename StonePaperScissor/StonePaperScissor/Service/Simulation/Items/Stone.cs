@@ -19,7 +19,7 @@ public class Stone : Item
         {
             List<Field> optionalFields = Util.Util.FieldsAround(Position, row,column,items);
             var hittableFields = optionalFields
-                .FindAll(f => f.Item is { Type: ItemType.Scissor });
+                .FindAll(f => f.Item is { Type: ItemType.Scissor, Alive: true });
             if (hittableFields.Count == 0)
             {
                 Field randomField = Util.Util.GetRandomField(optionalFields);
