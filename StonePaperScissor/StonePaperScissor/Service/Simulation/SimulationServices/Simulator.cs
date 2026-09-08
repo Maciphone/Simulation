@@ -182,37 +182,33 @@ public class Simulator :ISimulator
         
     }
 
-    private void MakeOneTransform(Item hitedItem)
+    private void MakeOneTransform(Item hitItem)
     {
-        switch (hitedItem.Type)
+        if (hitItem.Alive)
         {
-            case ItemType.Paper:
-               _items.Add(new Scissor("S", hitedItem.Position));
-               //_items.Remove(hitedItem);
-               Console.WriteLine( _items.Remove(hitedItem));
-               
-                // hitedItem.Sign = "S";
-                // hitedItem.Type = ItemType.Scissor;
-            break;
-            case ItemType.Scissor:
-               _items.Add(new Stone("O", hitedItem.Position));
-               //_items.Remove(hitedItem);
-               Console.WriteLine( _items.Remove(hitedItem));
-
-                // hitedItem.Sign = "O";
-                // hitedItem.Type = ItemType.Stone;
-                break;
-            case ItemType.Stone:
-                _items.Add(new Paper("P", hitedItem.Position));
-                //_items.Remove(hitedItem);
-                Console.WriteLine( _items.Remove(hitedItem));
-
-                // hitedItem.Sign = "P";
-                // hitedItem.Type = ItemType.Paper;
-                break;
+            return;
         }
+
+        // Item.Equals compares type and position, not individual identity.
+        var index = _items.FindIndex(item => ReferenceEquals(item, hitItem));
+        if (index < 0)
+        {
+            return;
+        }
+
+        Item replacement = hitItem.Type switch
+        {
+            ItemType.Paper => new Scissor("S", hitItem.Position),
+            ItemType.Scissor => new Stone("O", hitItem.Position),
+            ItemType.Stone => new Paper("P", hitItem.Position),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(hitItem.Type), hitItem.Type, "Unknown item type")
+        };
+
+        // Replace exactly one defeated object without changing the population.
+        _items[index] = replacement;
     }
-    
+
     //Fisher-Yates Shuffle
     private void Shuffle_items()
     {
